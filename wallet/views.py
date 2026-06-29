@@ -7,9 +7,8 @@ from django.contrib import messages
 from django.db import transaction as db_transaction
 from django.db.models import Sum, Q
 from decimal import Decimal
-from .models import Wallet, Transaction, TransferRequest
-from .forms import RegisterForm, DepositForm, WithdrawForm, TransferForm
-
+from .models import Wallet, Transaction, TransferRequest, Recipient
+from .forms import RegisterForm, DepositForm, WithdrawForm, TransferForm, RecipientForm
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -19,7 +18,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             Wallet.objects.get_or_create(user=user)
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')  # add backend here
             messages.success(request, f'Welcome, {user.first_name}! Your wallet is ready.')
             return redirect('dashboard')
     else:
