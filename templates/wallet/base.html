@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Vault — Digital Wallet{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f11;
+      --surface: #18181c;
+      --surface2: #222228;
+      --border: #2e2e36;
+      --text: #f0eff4;
+      --muted: #8a8a9a;
+      --accent: #7c6af7;
+      --accent-light: #9d8fff;
+      --green: #34d399;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --radius: 14px;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-family: var(--mono);
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    .nav-brand span { color: var(--accent-light); }
+    .nav-links { display: flex; gap: 4px; align-items: center; }
+    .nav-links a {
+      padding: 6px 14px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--surface); text-decoration: none; }
+    .nav-links a.active { color: var(--text); background: var(--surface2); }
+    .nav-logout {
+      padding: 6px 14px;
+      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .nav-logout:hover { color: var(--red); border-color: var(--red); }
+
+    /* LAYOUT */
+    .page { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+    .page-sm { max-width: 460px; margin: 0 auto; padding: 60px 24px; }
+
+    /* CARDS */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* FORMS */
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+    input[type=text], input[type=email], input[type=password], input[type=number] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      outline: none;
+      transition: border 0.15s;
+    }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 9px;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-light); }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent-light); }
+    .btn-full { width: 100%; }
+    .btn-danger { background: var(--red); color: #fff; }
+
+    /* MESSAGES */
+    .messages { margin-bottom: 20px; }
+    .msg {
+      padding: 12px 16px;
+      border-radius: 9px;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .msg-success { background: #1a2e25; border: 1px solid #34d39940; color: var(--green); }
+    .msg-error { background: #2e1a1a; border: 1px solid #f8717140; color: var(--red); }
+    .msg-info { background: #1c1a2e; border: 1px solid var(--accent); color: var(--accent-light); }
+
+    /* MISC */
+    .mono { font-family: var(--mono); }
+    .text-muted { color: var(--muted); }
+    .text-green { color: var(--green); }
+    .text-red { color: var(--red); }
+    .text-accent { color: var(--accent-light); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    .errorlist { list-style: none; color: var(--red); font-size: 13px; margin-top: 4px; }
+
+    /* PAGE HEADER */
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; }
+    .page-header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    /* DIVIDER */
+    hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* BADGE */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .badge-green { background: #1a2e25; color: var(--green); }
+    .badge-red { background: #2e1a1a; color: var(--red); }
+    .badge-purple { background: #1e1a2e; color: var(--accent-light); }
+    .badge-yellow { background: #2e2a1a; color: var(--yellow); }
+  </style>
+  {% block extra_style %}{% endblock %}
+</head>
+<body>
+  {% if user.is_authenticated %}
+  <nav>
+    <div class="nav-brand">vault<span>.</span></div>
+    <div class="nav-links">
+      <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+      <a href="{% url 'deposit' %}" {% if request.resolver_match.url_name == 'deposit' %}class="active"{% endif %}>Deposit</a>
+      <a href="{% url 'withdraw' %}" {% if request.resolver_match.url_name == 'withdraw' %}class="active"{% endif %}>Withdraw</a>
+      <a href="{% url 'transfer' %}" {% if request.resolver_match.url_name == 'transfer' %}class="active"{% endif %}>Send</a>
+      <a href="{% url 'transactions' %}" {% if request.resolver_match.url_name == 'transactions' %}class="active"{% endif %}>History</a>
+    </div>
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="nav-logout">Logout</button>
+    </form>
+  </nav>
+  {% endif %}
+
+  {% if messages %}
+  <div style="max-width:900px;margin:16px auto;padding:0 24px;">
+    <div class="messages">
+      {% for message in messages %}
+        <div class="msg {% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% else %}msg-info{% endif %}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</body>
+</html>
