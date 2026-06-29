@@ -10,4 +10,6 @@ urlpatterns = [
     path('withdraw/', views.withdraw, name='withdraw'),
     path('transfer/', views.transfer, name='transfer'),
     path('transactions/', views.transactions, name='transactions'),
+    path('recipients/', views.recipients, name='recipients'),
+    path('recipients/delete/<int:recipient_id>/', views.delete_recipient, name='delete_recipient'),
 ]
