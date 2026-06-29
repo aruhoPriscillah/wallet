@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Wallet, Transaction, TransferRequest
+from .models import Wallet, Transaction, TransferRequest, Recipient
+
 
 
 @admin.register(Wallet)
