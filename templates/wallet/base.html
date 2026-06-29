@@ -202,6 +202,7 @@
       <a href="{% url 'withdraw' %}" {% if request.resolver_match.url_name == 'withdraw' %}class="active"{% endif %}>Withdraw</a>
       <a href="{% url 'transfer' %}" {% if request.resolver_match.url_name == 'transfer' %}class="active"{% endif %}>Send</a>
       <a href="{% url 'transactions' %}" {% if request.resolver_match.url_name == 'transactions' %}class="active"{% endif %}>History</a>
+      <a href="{% url 'recipients' %}" {% if request.resolver_match.url_name == 'recipients' %}class="active"{% endif %}>Recipients</a>
     </div>
     <form method="post" action="{% url 'logout' %}">
       {% csrf_token %}

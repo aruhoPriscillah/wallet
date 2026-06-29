@@ -1,0 +1,66 @@
+{% extends 'wallet/base.html' %}
+{% block title %}Recipients — Vault{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <h1>Recipients</h1>
+    <p>Save people you send money to frequently</p>
+  </div>
+
+  <!-- Add Recipient Form -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title" style="margin-bottom:16px;">Add New Recipient</div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Full Name</label>
+          {{ form.name }}
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          {{ form.username }}
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Add Recipient</button>
+    </form>
+  </div>
+
+  <!-- Recipients List -->
+  <div class="card">
+    <div class="card-title" style="margin-bottom:16px;">Saved Recipients</div>
+    {% if recipients %}
+      {% for r in recipients %}
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:38px; height:38px; border-radius:50%; background:var(--surface2);
+                      display:flex; align-items:center; justify-content:center;
+                      font-weight:600; color:var(--accent-light); font-size:15px;">
+            {{ r.name|first|upper }}
+          </div>
+          <div>
+            <div style="font-size:14px; font-weight:500;">{{ r.name }}</div>
+            <div style="font-size:12px; color:var(--muted);">@{{ r.username }}</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <a href="{% url 'transfer' %}?to={{ r.username }}"
+             class="btn btn-ghost" style="font-size:12px; padding:6px 12px;">Send Money</a>
+          <form method="post" action="{% url 'delete_recipient' r.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="font-size:12px; padding:6px 12px;
+                    background:var(--surface2); color:var(--red); border:1px solid var(--border);">
+              Remove
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center; padding:32px 0; color:var(--muted); font-size:14px;">
+        No recipients yet. Add someone above to get started.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

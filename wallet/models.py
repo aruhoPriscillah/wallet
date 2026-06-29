@@ -61,3 +61,14 @@ class TransferRequest(models.Model):
     def __str__(self):
         return f"Transfer {self.amount} from {self.sender_wallet.user.username} to {self.receiver_wallet.user.username}"
 
+class Recipient(models.Model):
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='recipients')
+    name = models.CharField(max_length=100)
+    username = models.CharField(max_length=150)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['wallet', 'username']
+
+    def __str__(self):
+        return f"{self.name} (@{self.username})"

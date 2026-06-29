@@ -35,3 +35,9 @@ class TransferForm(forms.Form):
                                 widget=forms.NumberInput(attrs={'placeholder': '0.00', 'step': '0.01'}))
     note = forms.CharField(max_length=255, required=False,
                            widget=forms.TextInput(attrs={'placeholder': 'Optional note...'}))
+
+class RecipientForm(forms.Form):
+    name = forms.CharField(max_length=100,
+                           widget=forms.TextInput(attrs={'placeholder': 'e.g. Jane Doe'}))
+    username = forms.CharField(max_length=150,
+                               widget=forms.TextInput(attrs={'placeholder': 'their username'}))

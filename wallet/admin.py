@@ -18,3 +18,7 @@ class TransactionAdmin(admin.ModelAdmin):
 @admin.register(TransferRequest)
 class TransferRequestAdmin(admin.ModelAdmin):
     list_display = ['sender_wallet', 'receiver_wallet', 'amount', 'created_at']
+
+@admin.register(Recipient)
+class RecipientAdmin(admin.ModelAdmin):
+    list_display = ['wallet', 'name', 'username', 'created_at']

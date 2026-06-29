@@ -157,12 +157,17 @@ def transfer(request):
                                 description=f'Transfer from @{request.user.username}: {note}',
                                 status='completed',
                             )
-                        messages.success(request, f'UGX{amount:,.2f} sent to @{username}.')
+                        messages.success(request, f'UGX {amount:,.0f} sent to @{username}.')
                         return redirect('dashboard')
                 except User.DoesNotExist:
                     messages.error(request, f'User "{username}" not found.')
     else:
-        form = TransferForm()
+        initial = {}
+        to = request.GET.get('to', '')
+        if to:
+            initial['recipient_username'] = to
+        form = TransferForm(initial=initial)
+
     return render(request, 'wallet/transfer.html', {'form': form, 'wallet': request.user.wallet})
 
 
@@ -178,3 +183,47 @@ def transactions(request):
         'wallet': wallet,
         'filter_type': txn_type,
     })
+
+
+@login_required
+def recipients(request):
+    wallet = request.user.wallet
+    if request.method == 'POST':
+        form = RecipientForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            username = form.cleaned_data['username']
+            # check the user actually exists
+            if not User.objects.filter(username=username).exists():
+                messages.error(request, f'No user found with username "{username}".')
+            elif username == request.user.username:
+                messages.error(request, "You can't add yourself as a recipient.")
+            else:
+                _, created = Recipient.objects.get_or_create(
+                    wallet=wallet, username=username,
+                    defaults={'name': name}
+                )
+                if created:
+                    messages.success(request, f'{name} added to your recipients.')
+                else:
+                    messages.error(request, f'@{username} is already in your recipients.')
+    else:
+        form = RecipientForm()
+
+    all_recipients = wallet.recipients.all()
+    return render(request, 'wallet/recipients.html', {
+        'form': form,
+        'recipients': all_recipients,
+    })
+
+
+@login_required
+def delete_recipient(request, recipient_id):
+    wallet = request.user.wallet
+    try:
+        recipient = wallet.recipients.get(id=recipient_id)
+        recipient.delete()
+        messages.success(request, 'Recipient removed.')
+    except Recipient.DoesNotExist:
+        messages.error(request, 'Recipient not found.')
+    return redirect('recipients')
