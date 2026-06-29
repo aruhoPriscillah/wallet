@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: vault-wallet
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn wallet_project.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.12.0"
