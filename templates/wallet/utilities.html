@@ -1,0 +1,151 @@
+{% extends 'wallet/base.html' %}
+{% block title %}Pay Utilities — Vault{% endblock %}
+{% block content %}
+<div class="page-sm">
+  <div class="page-header">
+    <h1>Pay Utilities</h1>
+    <p>Airtime, internet, TV, school fees and more</p>
+  </div>
+
+  <div class="card" style="margin-bottom:16px; background:#1e1a2e; border-color:#3a3060;">
+    <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Available Balance</div>
+    <div style="font-family:var(--mono); font-size:28px; font-weight:500;" class="text-accent">UGX {{ wallet.balance|floatformat:0 }}</div>
+  </div>
+
+  <!-- Quick Category Buttons -->
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;">
+    {% for icon, label, cat in "📱,Airtime,airtime|🌐,Internet,internet|📺,TV,tv|🏫,School,school|💡,Electricity,electricity|💧,Water,water"|split:"|" %}
+    {% endfor %}
+
+    <button onclick="setCategory('airtime')" class="btn btn-ghost" style="flex-direction:column; padding:14px 8px; font-size:12px; gap:4px;">
+      📱<span>Airtime</span>
+    </button>
+    <button onclick="setCategory('internet')" class="btn btn-ghost" style="flex-direction:column; padding:14px 8px; font-size:12px; gap:4px;">
+      🌐<span>Internet</span>
+    </button>
+    <button onclick="setCategory('tv')" class="btn btn-ghost" style="flex-direction:column; padding:14px 8px; font-size:12px; gap:4px;">
+      📺<span>TV</span>
+    </button>
+    <button onclick="setCategory('school')" class="btn btn-ghost" style="flex-direction:column; padding:14px 8px; font-size:12px; gap:4px;">
+      🏫<span>School</span>
+    </button>
+    <button onclick="setCategory('electricity')" class="btn btn-ghost" style="flex-direction:column; padding:14px 8px; font-size:12px; gap:4px;">
+      💡<span>Electricity</span>
+    </button>
+    <button onclick="setCategory('water')" class="btn btn-ghost" style="flex-direction:column; padding:14px 8px; font-size:12px; gap:4px;">
+      💧<span>Water</span>
+    </button>
+  </div>
+
+  <div class="card">
+    <form method="post" id="utilityForm">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Category</label>
+        <select name="category" id="categorySelect" style="width:100%; background:var(--surface2); border:1px solid var(--border);
+          border-radius:8px; padding:10px 14px; color:var(--text); font-family:var(--sans); font-size:15px; outline:none;">
+          <option value="">Select category...</option>
+          <option value="airtime">📱 Airtime</option>
+          <option value="internet">🌐 Internet</option>
+          <option value="tv">📺 TV Subscription</option>
+          <option value="school">🏫 School Fees</option>
+          <option value="electricity">💡 Electricity</option>
+          <option value="water">💧 Water</option>
+        </select>
+        {% if form.category.errors %}<ul class="errorlist">{% for e in form.category.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div class="form-group" id="providerGroup" style="display:none;">
+        <label>Provider</label>
+        <select name="provider" id="providerSelect" style="width:100%; background:var(--surface2); border:1px solid var(--border);
+          border-radius:8px; padding:10px 14px; color:var(--text); font-family:var(--sans); font-size:15px; outline:none;">
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label id="accountLabel">Phone / Account Number</label>
+        {{ form.account_number }}
+        {% if form.account_number.errors %}<ul class="errorlist">{% for e in form.account_number.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label>Amount (UGX)</label>
+        {{ form.amount }}
+        {% if form.amount.errors %}<ul class="errorlist">{% for e in form.amount.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+
+      <!-- Quick amount buttons -->
+      <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+        {% for amt in "1000,2000,5000,10000,20000,50000"|split:"," %}
+        <button type="button" onclick="setAmount('{{ amt }}')"
+                class="btn btn-ghost" style="font-size:12px; padding:6px 12px;">
+          {{ amt }}
+        </button>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label>Note (optional)</label>
+        {{ form.note }}
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button type="submit" class="btn btn-primary btn-full">Pay Now</button>
+        <a href="{% url 'utility_history' %}" class="btn btn-ghost">History</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const providers = {
+  airtime: ['MTN', 'Airtel', 'Lycamobile'],
+  internet: ['MTN MiFi', 'Airtel 4G', 'Liquid Telecom', 'Roke Telecom'],
+  tv: ['DSTV', 'GOtv', 'Startimes', 'Azam TV'],
+  school: ['Other - Enter institution name in note'],
+  electricity: ['UMEME', 'KPLC'],
+  water: ['NWSC'],
+};
+
+const accountLabels = {
+  airtime: 'Phone Number',
+  internet: 'Phone / Account Number',
+  tv: 'Smartcard / IUC Number',
+  school: 'Student Number / Reference',
+  electricity: 'Meter Number',
+  water: 'Account Number',
+};
+
+function setCategory(cat) {
+  document.getElementById('categorySelect').value = cat;
+  updateProviders(cat);
+}
+
+function updateProviders(cat) {
+  const providerGroup = document.getElementById('providerGroup');
+  const providerSelect = document.getElementById('providerSelect');
+  const accountLabel = document.getElementById('accountLabel');
+
+  if (cat && providers[cat]) {
+    providerGroup.style.display = 'block';
+    providerSelect.innerHTML = providers[cat].map(p =>
+      `<option value="${p}">${p}</option>`
+    ).join('');
+  } else {
+    providerGroup.style.display = 'none';
+  }
+
+  if (cat && accountLabels[cat]) {
+    accountLabel.textContent = accountLabels[cat];
+  }
+}
+
+function setAmount(amt) {
+  document.querySelector('input[name="amount"]').value = amt;
+}
+
+document.getElementById('categorySelect').addEventListener('change', function() {
+  updateProviders(this.value);
+});
+</script>
+{% endblock %}

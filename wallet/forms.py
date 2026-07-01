@@ -41,3 +41,25 @@ class RecipientForm(forms.Form):
                            widget=forms.TextInput(attrs={'placeholder': 'e.g. Jane Doe'}))
     username = forms.CharField(max_length=150,
                                widget=forms.TextInput(attrs={'placeholder': 'their username'}))
+
+
+class UtilityPaymentForm(forms.Form):
+    CATEGORY_CHOICES = [
+        ('', 'Select category...'),
+        ('airtime', 'Airtime'),
+        ('internet', 'Internet'),
+        ('tv', 'TV Subscription'),
+        ('school', 'School Fees'),
+        ('electricity', 'Electricity'),
+        ('water', 'Water'),
+    ]
+
+    category = forms.ChoiceField(choices=CATEGORY_CHOICES)
+    provider = forms.CharField(max_length=50,
+                               widget=forms.TextInput(attrs={'placeholder': 'e.g. MTN, DSTV...'}))
+    account_number = forms.CharField(max_length=100,
+                                     widget=forms.TextInput(attrs={'placeholder': 'Phone number, account or card number'}))
+    amount = forms.DecimalField(min_value=1, max_digits=10, decimal_places=2,
+                                widget=forms.NumberInput(attrs={'placeholder': '0', 'step': '1'}))
+    note = forms.CharField(max_length=255, required=False,
+                           widget=forms.TextInput(attrs={'placeholder': 'Optional note'}))

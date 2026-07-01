@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Wallet, Transaction, TransferRequest, Recipient
+from .models import Wallet, Transaction, TransferRequest, Recipient, UtilityPayment
 
 
 
@@ -23,3 +23,8 @@ class TransferRequestAdmin(admin.ModelAdmin):
 @admin.register(Recipient)
 class RecipientAdmin(admin.ModelAdmin):
     list_display = ['wallet', 'name', 'username', 'created_at']
+
+    @admin.register(UtilityPayment)
+class UtilityPaymentAdmin(admin.ModelAdmin):
+    list_display = ['wallet', 'category', 'provider', 'account_number', 'amount', 'status', 'created_at']
+    list_filter = ['category', 'status']

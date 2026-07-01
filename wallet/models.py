@@ -72,3 +72,42 @@ class Recipient(models.Model):
 
     def __str__(self):
         return f"{self.name} (@{self.username})"
+
+
+class UtilityPayment(models.Model):
+    CATEGORY_CHOICES = [
+        ('airtime', 'Airtime'),
+        ('internet', 'Internet'),
+        ('tv', 'TV Subscription'),
+        ('school', 'School Fees'),
+        ('electricity', 'Electricity'),
+        ('water', 'Water'),
+    ]
+
+    PROVIDER_CHOICES = {
+        'airtime': ['MTN', 'Airtel', 'Lycamobile'],
+        'internet': ['MTN MiFi', 'Airtel 4G', 'Liquid Telecom', 'Roke Telecom'],
+        'tv': ['DSTV', 'GOtv', 'Startimes', 'Azam TV'],
+        'school': ['Other'],
+        'electricity': ['UMEME', 'KPLC'],
+        'water': ['NWSC'],
+    }
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='utility_payments')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    provider = models.CharField(max_length=50)
+    account_number = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=10, choices=[
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('pending', 'Pending'),
+    ], default='completed')
+    note = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.category} — {self.provider} — UGX {self.amount}"

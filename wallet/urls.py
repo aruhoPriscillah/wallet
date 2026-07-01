@@ -13,4 +13,6 @@ urlpatterns = [
     path('recipients/', views.recipients, name='recipients'),
     path('recipients/delete/<int:recipient_id>/', views.delete_recipient, name='delete_recipient'),
     path('qr/', views.qr_code, name='qr_code'),
+    path('utilities/', views.utilities, name='utilities'),
+    path('utilities/history/', views.utility_history, name='utility_history'),
 ]

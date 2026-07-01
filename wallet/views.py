@@ -7,11 +7,12 @@ from django.contrib import messages
 from django.db import transaction as db_transaction
 from django.db.models import Sum, Q
 from decimal import Decimal
-from .models import Wallet, Transaction, TransferRequest, Recipient
-from .forms import RegisterForm, DepositForm, WithdrawForm, TransferForm, RecipientForm
+from .models import Wallet, Transaction, TransferRequest, Recipient, UtilityPayment
+from .forms import RegisterForm, DepositForm, WithdrawForm, TransferForm, RecipientForm, UtilityPaymentForm
 import qrcode
 import io
 import base64
+
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -250,4 +251,59 @@ def qr_code(request):
         'qr_b64': qr_b64,
         'username': username,
         'transfer_url': transfer_url,
+    })
+
+@login_required
+def utilities(request):
+    wallet = request.user.wallet
+    if request.method == 'POST':
+        form = UtilityPaymentForm(request.POST)
+        if form.is_valid():
+            category = form.cleaned_data['category']
+            provider = form.cleaned_data['provider']
+            account_number = form.cleaned_data['account_number']
+            amount = form.cleaned_data['amount']
+            note = form.cleaned_data.get('note', '')
+
+            if wallet.balance < amount:
+                messages.error(request, 'Insufficient balance.')
+            else:
+                with db_transaction.atomic():
+                    wallet.balance -= amount
+                    wallet.save()
+                    UtilityPayment.objects.create(
+                        wallet=wallet,
+                        category=category,
+                        provider=provider,
+                        account_number=account_number,
+                        amount=amount,
+                        note=note,
+                        status='completed',
+                    )
+                    Transaction.objects.create(
+                        wallet=wallet,
+                        transaction_type='withdrawal',
+                        amount=amount,
+                        description=f'{provider} {category} — {account_number}',
+                        status='completed',
+                    )
+                messages.success(request, f'UGX {amount:,.0f} paid to {provider} successfully.')
+                return redirect('utility_history')
+    else:
+        form = UtilityPaymentForm()
+
+    return render(request, 'wallet/utilities.html', {'form': form, 'wallet': wallet})
+
+
+@login_required
+def utility_history(request):
+    wallet = request.user.wallet
+    category = request.GET.get('category', '')
+    payments = wallet.utility_payments.all()
+    if category:
+        payments = payments.filter(category=category)
+    return render(request, 'wallet/utility_history.html', {
+        'payments': payments,
+        'wallet': wallet,
+        'filter_category': category,
     })
