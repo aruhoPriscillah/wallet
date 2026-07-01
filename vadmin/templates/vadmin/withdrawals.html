@@ -1,0 +1,35 @@
+{% extends 'vadmin/base.html' %}
+{% block title %}Withdrawals — Vault Admin{% endblock %}
+{% block page_title %}Withdrawal Requests{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Withdrawal Requests</h2>
+  <div style="display:flex; gap:8px;">
+    <a href="?status=pending" class="btn {% if status == 'pending' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">Pending</a>
+    <a href="?status=approved" class="btn {% if status == 'approved' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">Approved</a>
+    <a href="?status=rejected" class="btn {% if status == 'rejected' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">Rejected</a>
+  </div>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>User</th><th>Amount</th><th>Bank</th><th>Account</th><th>Requested</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for r in requests %}
+        <tr>
+          <td class="mono" style="color:var(--accent-light);">@{{ r.wallet.user.username }}</td>
+          <td class="mono">UGX {{ r.amount|floatformat:0 }}</td>
+          <td>{{ r.bank_name }}</td>
+          <td class="mono">{{ r.account_number }}</td>
+          <td style="color:var(--muted);">{{ r.requested_at|date:"M d, Y" }}</td>
+          <td><span class="badge {% if r.status == 'approved' %}badge-green{% elif r.status == 'rejected' %}badge-red{% else %}badge-yellow{% endif %}">{{ r.status }}</span></td>
+          <td><a href="{% url 'admin_withdrawal_review' r.id %}" class="btn btn-ghost btn-sm">Review</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:32px;">No {{ status }} requests.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'vadmin/base.html' %}
+{% block title %}Withdrawal Review — Vault Admin{% endblock %}
+{% block page_title %}Withdrawal Review{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">Request Details</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:14px;">
+      <div><div style="color:var(--muted); font-size:12px;">User</div>@{{ req.wallet.user.username }}</div>
+      <div><div style="color:var(--muted); font-size:12px;">Amount</div><span class="mono" style="color:var(--green); font-size:18px;">UGX {{ req.amount|floatformat:0 }}</span></div>
+      <div><div style="color:var(--muted); font-size:12px;">Bank</div>{{ req.bank_name }}</div>
+      <div><div style="color:var(--muted); font-size:12px;">Account Number</div><span class="mono">{{ req.account_number }}</span></div>
+      <div><div style="color:var(--muted); font-size:12px;">Account Name</div>{{ req.account_name }}</div>
+      <div><div style="color:var(--muted); font-size:12px;">Wallet Balance</div><span class="mono">UGX {{ req.wallet.balance|floatformat:0 }}</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Decision</div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Admin Notes</label>
+        <textarea name="admin_notes" rows="3" placeholder="Add notes..."></textarea>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button type="submit" name="action" value="approve" class="btn btn-success">✓ Approve & Pay</button>
+        <button type="submit" name="action" value="reject" class="btn btn-danger">✗ Reject & Refund</button>
+        <a href="{% url 'admin_withdrawals' %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

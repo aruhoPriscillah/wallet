@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',      
     'allauth.socialaccount.providers.google', 
     'wallet',
+    'vadmin',
 ]
 
 SITE_ID = int(os.environ.get('SITE_ID', 2))
@@ -48,6 +49,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'vadmin.context_processors.admin_counts',
             ],
         },
     },
@@ -74,6 +76,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+
 
 # Allauth settings
 SOCIALACCOUNT_AUTO_SIGNUP = True

@@ -1,0 +1,34 @@
+{% extends 'vadmin/base.html' %}
+{% block title %}KYC — Vault Admin{% endblock %}
+{% block page_title %}KYC Verification{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>KYC Documents</h2>
+  <div style="display:flex; gap:8px;">
+    <a href="?status=pending" class="btn {% if status == 'pending' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">Pending</a>
+    <a href="?status=approved" class="btn {% if status == 'approved' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">Approved</a>
+    <a href="?status=rejected" class="btn {% if status == 'rejected' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">Rejected</a>
+  </div>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>User</th><th>Document</th><th>Name</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for doc in docs %}
+        <tr>
+          <td class="mono" style="color:var(--accent-light);">@{{ doc.wallet.user.username }}</td>
+          <td>{{ doc.get_doc_type_display }} · {{ doc.doc_number }}</td>
+          <td>{{ doc.full_name }}</td>
+          <td style="color:var(--muted);">{{ doc.submitted_at|date:"M d, Y" }}</td>
+          <td><span class="badge {% if doc.status == 'approved' %}badge-green{% elif doc.status == 'rejected' %}badge-red{% else %}badge-yellow{% endif %}">{{ doc.status }}</span></td>
+          <td><a href="{% url 'admin_kyc_review' doc.id %}" class="btn btn-ghost btn-sm">Review</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center; color:var(--muted); padding:32px;">No {{ status }} documents.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

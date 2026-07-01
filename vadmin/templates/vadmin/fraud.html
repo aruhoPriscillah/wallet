@@ -1,0 +1,40 @@
+{% extends 'vadmin/base.html' %}
+{% block title %}Fraud Monitor — Vault Admin{% endblock %}
+{% block page_title %}Fraud Monitoring{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Active Fraud Flags</h2>
+  <div style="display:flex; gap:8px;">
+    <a href="{% url 'admin_fraud' %}" class="btn {% if not severity %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">All</a>
+    <a href="?severity=high" class="btn {% if severity == 'high' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">🔴 High</a>
+    <a href="?severity=medium" class="btn {% if severity == 'medium' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">🟠 Medium</a>
+    <a href="?severity=low" class="btn {% if severity == 'low' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">🟡 Low</a>
+  </div>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>User</th><th>Reason</th><th>Severity</th><th>Flagged</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for flag in flags %}
+        <tr>
+          <td><a href="{% url 'admin_user_detail' flag.wallet.user.id %}" class="mono" style="color:var(--accent-light);">@{{ flag.wallet.user.username }}</a></td>
+          <td style="color:var(--muted);">{{ flag.reason }}</td>
+          <td><span class="badge {% if flag.severity == 'high' %}badge-red{% elif flag.severity == 'medium' %}badge-orange{% else %}badge-yellow{% endif %}">{{ flag.severity }}</span></td>
+          <td style="color:var(--muted);">{{ flag.created_at|date:"M d, Y g:i A" }}</td>
+          <td style="display:flex; gap:6px;">
+            <a href="{% url 'admin_user_detail' flag.wallet.user.id %}" class="btn btn-ghost btn-sm">View User</a>
+            <form method="post" action="{% url 'admin_resolve_flag' flag.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success btn-sm">Resolve</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="text-align:center; color:var(--muted); padding:32px;">No active flags 🎉</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

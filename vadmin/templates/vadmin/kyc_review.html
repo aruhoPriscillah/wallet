@@ -1,0 +1,33 @@
+{% extends 'vadmin/base.html' %}
+{% block title %}KYC Review — Vault Admin{% endblock %}
+{% block page_title %}KYC Review{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">Document Details</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:14px;">
+      <div><div style="color:var(--muted); font-size:12px;">Username</div>@{{ doc.wallet.user.username }}</div>
+      <div><div style="color:var(--muted); font-size:12px;">Document Type</div>{{ doc.get_doc_type_display }}</div>
+      <div><div style="color:var(--muted); font-size:12px;">Document Number</div><span class="mono">{{ doc.doc_number }}</span></div>
+      <div><div style="color:var(--muted); font-size:12px;">Full Name</div>{{ doc.full_name }}</div>
+      <div><div style="color:var(--muted); font-size:12px;">Date of Birth</div>{{ doc.date_of_birth }}</div>
+      <div><div style="color:var(--muted); font-size:12px;">Submitted</div>{{ doc.submitted_at|date:"M d, Y" }}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Decision</div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Notes (optional)</label>
+        <textarea name="notes" rows="3" placeholder="Add review notes...">{{ doc.notes }}</textarea>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button type="submit" name="action" value="approve" class="btn btn-success">✓ Approve</button>
+        <button type="submit" name="action" value="reject" class="btn btn-danger">✗ Reject</button>
+        <a href="{% url 'admin_kyc' %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'vadmin/base.html' %}
+{% block title %}Reports — Vault Admin{% endblock %}
+{% block page_title %}Reports{% endblock %}
+{% block content %}
+
+<div class="grid-3" style="margin-bottom:20px;">
+  <div class="stat-card">
+    <div class="stat-label">Deposits (30 days)</div>
+    <div class="stat-value" style="color:var(--green);">{{ deposit_total|floatformat:0 }}</div>
+    <div class="stat-sub">UGX</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Withdrawals (30 days)</div>
+    <div class="stat-value" style="color:var(--red);">{{ withdrawal_total|floatformat:0 }}</div>
+    <div class="stat-sub">UGX</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Transfers (30 days)</div>
+    <div class="stat-value" style="color:var(--accent-light);">{{ transfer_total|floatformat:0 }}</div>
+    <div class="stat-sub">UGX</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Top Users by Volume (30 days)</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>User</th><th>Transactions</th><th>Total Volume (UGX)</th><th>Balance (UGX)</th></tr></thead>
+      <tbody>
+        {% for w in top_users %}
+        <tr>
+          <td style="color:var(--muted);">{{ forloop.counter }}</td>
+          <td><a href="{% url 'admin_user_detail' w.user.id %}" class="mono" style="color:var(--accent-light);">@{{ w.user.username }}</a></td>
+          <td>{{ w.txn_count|default:0 }}</td>
+          <td class="mono">{{ w.txn_volume|floatformat:0|default:0 }}</td>
+          <td class="mono" style="color:var(--green);">{{ w.balance|floatformat:0 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="text-align:center; color:var(--muted); padding:32px;">No data yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

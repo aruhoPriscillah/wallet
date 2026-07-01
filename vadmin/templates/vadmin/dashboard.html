@@ -1,0 +1,128 @@
+{% extends 'vadmin/base.html' %}
+{% block title %}Admin Dashboard — Vault{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Users</div>
+    <div class="stat-value" style="color:var(--accent-light);">{{ total_users }}</div>
+    <div class="stat-sub">+{{ new_users_today }} today · +{{ new_users_week }} this week</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Balance</div>
+    <div class="stat-value" style="color:var(--green);">{{ total_balance|floatformat:0 }}</div>
+    <div class="stat-sub">UGX across all wallets</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Volume Today</div>
+    <div class="stat-value" style="color:var(--yellow);">{{ volume_today|floatformat:0 }}</div>
+    <div class="stat-sub">UGX · {{ transactions_today }} transactions</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Alerts</div>
+    <div class="stat-value" style="color:var(--red);">{{ active_flags }}</div>
+    <div class="stat-sub">{{ high_flags }} high severity · {{ frozen_wallets }} frozen</div>
+  </div>
+</div>
+
+<!-- Pending Actions -->
+{% if pending_kyc or pending_withdrawals or high_flags %}
+<div class="alert alert-warning" style="margin-bottom:20px;">
+  ⚠️ Pending actions:
+  {% if pending_kyc %}<a href="{% url 'admin_kyc' %}" style="color:var(--yellow);">{{ pending_kyc }} KYC reviews</a> · {% endif %}
+  {% if pending_withdrawals %}<a href="{% url 'admin_withdrawals' %}" style="color:var(--yellow);">{{ pending_withdrawals }} withdrawal approvals</a> · {% endif %}
+  {% if high_flags %}<a href="{% url 'admin_fraud' %}?severity=high" style="color:var(--yellow);">{{ high_flags }} high-severity fraud flags</a>{% endif %}
+</div>
+{% endif %}
+
+<div class="grid-2" style="margin-bottom:20px;">
+  <!-- Chart -->
+  <div class="card">
+    <div class="card-title">Transaction Volume — Last 7 Days (UGX)</div>
+    <canvas id="volumeChart" height="180"></canvas>
+  </div>
+
+  <!-- Recent Flags -->
+  <div class="card">
+    <div class="card-title">Active Fraud Flags</div>
+    {% if recent_flags %}
+      {% for flag in recent_flags %}
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:13px; font-weight:500;">@{{ flag.wallet.user.username }}</div>
+          <div style="font-size:12px; color:var(--muted);">{{ flag.reason|truncatechars:40 }}</div>
+        </div>
+        <span class="badge {% if flag.severity == 'high' %}badge-red{% elif flag.severity == 'medium' %}badge-orange{% else %}badge-yellow{% endif %}">
+          {{ flag.severity }}
+        </span>
+      </div>
+      {% endfor %}
+      <a href="{% url 'admin_fraud' %}" style="font-size:12px; color:var(--accent-light); display:block; margin-top:10px;">View all →</a>
+    {% else %}
+      <div style="color:var(--muted); font-size:13px; padding:20px 0; text-align:center;">No active flags 🎉</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="card">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+    <div class="card-title" style="margin:0;">Recent Transactions</div>
+    <a href="{% url 'admin_transactions' %}" style="font-size:12px; color:var(--accent-light);">View all →</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>User</th><th>Type</th><th>Amount</th><th>Description</th><th>Status</th><th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for txn in recent_transactions %}
+        <tr>
+          <td class="mono" style="color:var(--accent-light);">@{{ txn.wallet.user.username }}</td>
+          <td><span class="badge {% if txn.transaction_type == 'deposit' or txn.transaction_type == 'transfer_in' %}badge-green{% else %}badge-red{% endif %}">{{ txn.transaction_type }}</span></td>
+          <td class="mono">{{ txn.amount|floatformat:0 }}</td>
+          <td style="color:var(--muted);">{{ txn.description|truncatechars:30 }}</td>
+          <td><span class="badge badge-green">{{ txn.status }}</span></td>
+          <td style="color:var(--muted);">{{ txn.created_at|date:"M d, g:i A" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+{{ chart_data|json_script:"chart-data" }}
+<script>
+const data = JSON.parse(document.getElementById('chart-data').textContent);
+new Chart(document.getElementById('volumeChart'), {
+  type: 'bar',
+  data: {
+    labels: data.map(d => d.date),
+    datasets: [{
+      label: 'UGX',
+      data: data.map(d => d.amount),
+      backgroundColor: '#7c6af740',
+      borderColor: '#7c6af7',
+      borderWidth: 2,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#2a2a38' }, ticks: { color: '#8a8a9a' } },
+      y: { grid: { color: '#2a2a38' }, ticks: { color: '#8a8a9a' } }
+    }
+  }
+});
+</script>
+{% endblock %}

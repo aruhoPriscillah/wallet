@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Vault Admin{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1e1e28;
+      --border: #2a2a38;
+      --text: #f0eff4;
+      --muted: #8a8a9a;
+      --accent: #7c6af7;
+      --accent-light: #9d8fff;
+      --green: #34d399;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --orange: #fb923c;
+      --sidebar-w: 220px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar-brand {
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .sidebar-brand span { color: var(--red); }
+    .sidebar-brand small { display: block; font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .sidebar-nav { padding: 12px 8px; flex: 1; }
+    .nav-section { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 12px 8px 6px; }
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 2px;
+      transition: all 0.15s;
+    }
+    .sidebar-nav a:hover { background: var(--surface2); color: var(--text); }
+    .sidebar-nav a.active { background: var(--surface2); color: var(--accent-light); }
+    .sidebar-nav a .badge-count {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 100px;
+      font-weight: 600;
+    }
+    .sidebar-footer { padding: 12px 8px; border-top: 1px solid var(--border); }
+    .sidebar-footer a { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 13px; }
+    .sidebar-footer a:hover { color: var(--text); }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar h1 { font-size: 16px; font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
+    .content { padding: 28px; flex: 1; }
+
+    /* CARDS */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+
+    /* STATS GRID */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+    .stat-value { font-size: 26px; font-weight: 600; font-family: 'DM Mono', monospace; letter-spacing: -1px; margin: 4px 0; }
+    .stat-label { font-size: 12px; color: var(--muted); }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+    td { padding: 12px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    /* BADGES */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .badge-green { background: #1a2e25; color: var(--green); }
+    .badge-red { background: #2e1a1a; color: var(--red); }
+    .badge-yellow { background: #2e2a1a; color: var(--yellow); }
+    .badge-orange { background: #2e211a; color: var(--orange); }
+    .badge-purple { background: #1e1a2e; color: var(--accent-light); }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent-light); }
+    .btn-danger { background: #2e1a1a; color: var(--red); border: 1px solid #4a2a2a; }
+    .btn-danger:hover { background: var(--red); color: #fff; }
+    .btn-success { background: #1a2e25; color: var(--green); border: 1px solid #2a4a38; }
+    .btn-success:hover { background: var(--green); color: #000; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* FORMS */
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; }
+    input[type=text], input[type=number], textarea, select {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+
+    /* ALERTS */
+    .alert { padding: 12px 16px; border-radius: 9px; font-size: 13px; margin-bottom: 16px; }
+    .alert-success { background: #1a2e25; border: 1px solid #34d39940; color: var(--green); }
+    .alert-warning { background: #2e2a1a; border: 1px solid #fbbf2440; color: var(--yellow); }
+    .alert-danger { background: #2e1a1a; border: 1px solid #f8717140; color: var(--red); }
+
+    /* GRID */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    input[type=search] { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 13px; outline: none; width: 220px; }
+    .mono { font-family: 'DM Mono', monospace; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .page-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .page-header h2 { font-size: 18px; font-weight: 600; }
+  </style>
+  {% block extra_style %}{% endblock %}
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    vault<span>.</span>admin
+    <small>Control Panel</small>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <a href="{% url 'admin_dashboard' %}" {% if request.resolver_match.url_name == 'admin_dashboard' %}class="active"{% endif %}>
+      📊 Dashboard
+    </a>
+
+    <div class="nav-section">Users</div>
+    <a href="{% url 'admin_users' %}" {% if 'user' in request.resolver_match.url_name %}class="active"{% endif %}>
+      👥 Manage Users
+    </a>
+    <a href="{% url 'admin_kyc' %}" {% if 'kyc' in request.resolver_match.url_name %}class="active"{% endif %}>
+      🪪 KYC Verification
+      {% if pending_kyc_count %}<span class="badge-count">{{ pending_kyc_count }}</span>{% endif %}
+    </a>
+
+    <div class="nav-section">Finance</div>
+    <a href="{% url 'admin_withdrawals' %}" {% if 'withdrawal' in request.resolver_match.url_name %}class="active"{% endif %}>
+      💸 Withdrawals
+      {% if pending_withdrawal_count %}<span class="badge-count">{{ pending_withdrawal_count }}</span>{% endif %}
+    </a>
+    <a href="{% url 'admin_transactions' %}" {% if request.resolver_match.url_name == 'admin_transactions' %}class="active"{% endif %}>
+      📋 Transactions
+    </a>
+
+    <div class="nav-section">Security</div>
+    <a href="{% url 'admin_fraud' %}" {% if request.resolver_match.url_name == 'admin_fraud' %}class="active"{% endif %}>
+      🚨 Fraud Monitor
+      {% if active_flag_count %}<span class="badge-count">{{ active_flag_count }}</span>{% endif %}
+    </a>
+
+    <div class="nav-section">Analytics</div>
+    <a href="{% url 'admin_reports' %}" {% if request.resolver_match.url_name == 'admin_reports' %}class="active"{% endif %}>
+      📈 Reports
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="{% url 'dashboard' %}">← Back to Vault</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+    <div class="topbar-right">
+      <span>👤 {{ request.user.username }}</span>
+    </div>
+  </div>
+
+  <div class="content">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-danger{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>
