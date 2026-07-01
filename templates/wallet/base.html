@@ -231,6 +231,7 @@
       <a href="{% url 'transfer' %}" {% if request.resolver_match.url_name == 'transfer' %}class="active"{% endif %}>Send</a>
       <a href="{% url 'transactions' %}" {% if request.resolver_match.url_name == 'transactions' %}class="active"{% endif %}>History</a>
       <a href="{% url 'recipients' %}" {% if request.resolver_match.url_name == 'recipients' %}class="active"{% endif %}>Recipients</a>
+      <a href="{% url 'qr_code' %}" {% if request.resolver_match.url_name == 'qr_code' %}class="active"{% endif %}>QR Code</a>
     </div>
     <form method="post" action="{% url 'logout' %}">
       {% csrf_token %}

@@ -12,4 +12,5 @@ urlpatterns = [
     path('transactions/', views.transactions, name='transactions'),
     path('recipients/', views.recipients, name='recipients'),
     path('recipients/delete/<int:recipient_id>/', views.delete_recipient, name='delete_recipient'),
+    path('qr/', views.qr_code, name='qr_code'),
 ]

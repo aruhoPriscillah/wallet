@@ -9,6 +9,9 @@ from django.db.models import Sum, Q
 from decimal import Decimal
 from .models import Wallet, Transaction, TransferRequest, Recipient
 from .forms import RegisterForm, DepositForm, WithdrawForm, TransferForm, RecipientForm
+import qrcode
+import io
+import base64
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -226,3 +229,25 @@ def delete_recipient(request, recipient_id):
     except Recipient.DoesNotExist:
         messages.error(request, 'Recipient not found.')
     return redirect('recipients')
+
+@login_required
+def qr_code(request):
+    username = request.user.username
+    # URL that pre-fills the transfer form with this user's username
+    transfer_url = request.build_absolute_uri(f'/transfer/?to={username}')
+
+    qr = qrcode.QRCode(box_size=8, border=4)
+    qr.add_data(transfer_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#7c6af7", back_color="#18181c")
+
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    qr_b64 = base64.b64encode(buffer.getvalue()).decode()
+
+    return render(request, 'wallet/qr_code.html', {
+        'qr_b64': qr_b64,
+        'username': username,
+        'transfer_url': transfer_url,
+    })

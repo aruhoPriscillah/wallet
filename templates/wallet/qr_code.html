@@ -1,0 +1,60 @@
+{% extends 'wallet/base.html' %}
+{% block title %}My QR Code — Vault{% endblock %}
+{% block content %}
+<div class="page-sm">
+  <div class="page-header" style="text-align:center;">
+    <h1>My Payment QR</h1>
+    <p>Let others scan this to send you money instantly</p>
+  </div>
+
+  <div class="card" style="text-align:center;">
+    <div style="background:#18181c; border-radius:12px; padding:20px; display:inline-block; margin-bottom:20px;">
+      <img src="data:image/png;base64,{{ qr_b64 }}" alt="QR Code" style="width:200px; height:200px; display:block;">
+    </div>
+
+    <div style="font-family:var(--mono); font-size:16px; color:var(--accent-light); margin-bottom:6px;">@{{ username }}</div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:20px;">Scan to send money to this wallet</div>
+
+    <hr>
+
+    <div style="margin-top:16px;">
+      <div class="card-title" style="margin-bottom:8px;">Share your payment link</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" value="{{ transfer_url }}" id="payLink" readonly
+               style="flex:1; font-size:12px; color:var(--muted); cursor:pointer;">
+        <button onclick="copyLink()" class="btn btn-ghost" style="font-size:13px; padding:8px 14px; white-space:nowrap;">
+          Copy Link
+        </button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <a href="data:image/png;base64,{{ qr_b64 }}" download="vault-qr-{{ username }}.png"
+         class="btn btn-primary" style="width:100%; margin-top:4px;">
+        Download QR Code
+      </a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title" style="margin-bottom:12px;">How it works</div>
+    <div style="font-size:14px; color:var(--muted); line-height:1.8;">
+      <div style="margin-bottom:8px;">📲 Share your QR code or payment link</div>
+      <div style="margin-bottom:8px;">👆 The sender scans it or clicks the link</div>
+      <div>✅ The transfer form opens pre-filled with your username</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyLink() {
+  const input = document.getElementById('payLink');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Link', 2000);
+  });
+}
+</script>
+{% endblock %}
