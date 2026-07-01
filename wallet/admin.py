@@ -24,7 +24,8 @@ class TransferRequestAdmin(admin.ModelAdmin):
 class RecipientAdmin(admin.ModelAdmin):
     list_display = ['wallet', 'name', 'username', 'created_at']
 
-    @admin.register(UtilityPayment)
+
+@admin.register(UtilityPayment)
 class UtilityPaymentAdmin(admin.ModelAdmin):
     list_display = ['wallet', 'category', 'provider', 'account_number', 'amount', 'status', 'created_at']
     list_filter = ['category', 'status']
