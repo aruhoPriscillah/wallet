@@ -1,45 +1,263 @@
 {% extends 'vadmin/base.html' %}
 {% block title %}Reports — Vault Admin{% endblock %}
-{% block page_title %}Reports{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
 {% block content %}
 
-<div class="grid-3" style="margin-bottom:20px;">
+<!-- Summary Cards -->
+<div class="stats-grid" style="margin-bottom:20px;">
   <div class="stat-card">
-    <div class="stat-label">Deposits (30 days)</div>
+    <div class="stat-label">Total Deposits (30d)</div>
     <div class="stat-value" style="color:var(--green);">{{ deposit_total|floatformat:0 }}</div>
     <div class="stat-sub">UGX</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Withdrawals (30 days)</div>
+    <div class="stat-label">Total Withdrawals (30d)</div>
     <div class="stat-value" style="color:var(--red);">{{ withdrawal_total|floatformat:0 }}</div>
     <div class="stat-sub">UGX</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Transfers (30 days)</div>
+    <div class="stat-label">Total Transfers (30d)</div>
     <div class="stat-value" style="color:var(--accent-light);">{{ transfer_total|floatformat:0 }}</div>
     <div class="stat-sub">UGX</div>
   </div>
+  <div class="stat-card">
+    <div class="stat-label">Active Users (30d)</div>
+    <div class="stat-value" style="color:var(--yellow);">{{ active_users }}</div>
+    <div class="stat-sub">unique wallets with transactions</div>
+  </div>
 </div>
 
+<!-- Daily Transaction Volume Chart -->
+<div class="card" style="margin-bottom:16px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <div class="card-title" style="margin:0;">Daily Transaction Volume (Last 30 Days)</div>
+    <span style="font-size:12px; color:var(--muted);">UGX</span>
+  </div>
+  <canvas id="dailyVolumeChart" height="100"></canvas>
+</div>
+
+<!-- Monthly Income Chart -->
+<div class="card" style="margin-bottom:16px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <div class="card-title" style="margin:0;">Monthly Income Report (Last 12 Months)</div>
+    <div style="display:flex; gap:12px; font-size:12px;">
+      <span style="color:var(--green);">● Deposits</span>
+      <span style="color:var(--red);">● Withdrawals</span>
+      <span style="color:var(--accent-light);">● Transfers</span>
+    </div>
+  </div>
+  <canvas id="monthlyChart" height="100"></canvas>
+</div>
+
+<div class="grid-2" style="margin-bottom:16px;">
+  <!-- Daily Active Users -->
+  <div class="card">
+    <div class="card-title" style="margin-bottom:16px;">Daily Active Users (Last 30 Days)</div>
+    <canvas id="dailyUsersChart" height="160"></canvas>
+  </div>
+
+  <!-- Transaction Type Breakdown -->
+  <div class="card">
+    <div class="card-title" style="margin-bottom:16px;">Transaction Type Breakdown (30 Days)</div>
+    <canvas id="typeChart" height="160"></canvas>
+    <div style="margin-top:16px;">
+      {% for t in type_breakdown %}
+      <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;">
+        <span style="color:var(--muted);">{{ t.transaction_type }}</span>
+        <span>
+          <span class="mono" style="color:var(--text);">{{ t.total|floatformat:0 }} UGX</span>
+          <span style="color:var(--muted); margin-left:8px;">{{ t.count }} txns</span>
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Top Users by Volume -->
 <div class="card">
-  <div class="card-title">Top Users by Volume (30 days)</div>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+    <div class="card-title" style="margin:0;">Top Users by Transaction Volume</div>
+    <span style="font-size:12px; color:var(--muted);">All time</span>
+  </div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>#</th><th>User</th><th>Transactions</th><th>Total Volume (UGX)</th><th>Balance (UGX)</th></tr></thead>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>User</th>
+          <th>Email</th>
+          <th>Transactions</th>
+          <th>Total Volume (UGX)</th>
+          <th>Balance (UGX)</th>
+          <th></th>
+        </tr>
+      </thead>
       <tbody>
         {% for w in top_users %}
         <tr>
-          <td style="color:var(--muted);">{{ forloop.counter }}</td>
-          <td><a href="{% url 'admin_user_detail' w.user.id %}" class="mono" style="color:var(--accent-light);">@{{ w.user.username }}</a></td>
-          <td>{{ w.txn_count|default:0 }}</td>
-          <td class="mono">{{ w.txn_volume|floatformat:0|default:0 }}</td>
+          <td style="color:var(--muted); font-weight:600;">
+            {% if forloop.counter == 1 %}🥇
+            {% elif forloop.counter == 2 %}🥈
+            {% elif forloop.counter == 3 %}🥉
+            {% else %}{{ forloop.counter }}{% endif %}
+          </td>
+          <td>
+            <div style="font-weight:500;">{{ w.user.get_full_name|default:w.user.username }}</div>
+            <div class="mono" style="font-size:11px; color:var(--muted);">@{{ w.user.username }}</div>
+          </td>
+          <td style="color:var(--muted); font-size:12px;">{{ w.user.email }}</td>
+          <td class="mono">{{ w.txn_count|default:0 }}</td>
+          <td class="mono" style="color:var(--accent-light); font-weight:500;">
+            {{ w.txn_volume|floatformat:0|default:0 }}
+          </td>
           <td class="mono" style="color:var(--green);">{{ w.balance|floatformat:0 }}</td>
+          <td>
+            <a href="{% url 'admin_user_detail' w.user.id %}" class="btn btn-ghost btn-sm">View</a>
+          </td>
         </tr>
         {% empty %}
-        <tr><td colspan="5" style="text-align:center; color:var(--muted); padding:32px;">No data yet.</td></tr>
+        <tr>
+          <td colspan="7" style="text-align:center; color:var(--muted); padding:32px;">No data yet.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const daily = {{ daily_chart|default:'[]'|safe }};
+const monthly = {{ monthly_chart|default:'[]'|safe }};
+const typeData = {{ type_chart|default:'[]'|safe }};
+const dailyUsers = {{ daily_users_chart|default:'[]'|safe }};
+
+const gridColor = '#2a2a38';
+const tickColor = '#8a8a9a';
+
+// Daily Volume Bar Chart
+new Chart(document.getElementById('dailyVolumeChart'), {
+  type: 'bar',
+  data: {
+    labels: daily.map(d => d.date),
+    datasets: [{
+      label: 'Volume (UGX)',
+      data: daily.map(d => d.amount),
+      backgroundColor: '#7c6af730',
+      borderColor: '#7c6af7',
+      borderWidth: 2,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 10 } },
+      y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+    }
+  }
+});
+
+// Monthly Income Line Chart
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'line',
+  data: {
+    labels: monthly.map(d => d.month),
+    datasets: [
+      {
+        label: 'Deposits',
+        data: monthly.map(d => d.deposits),
+        borderColor: '#34d399',
+        backgroundColor: '#34d39915',
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: 'Withdrawals',
+        data: monthly.map(d => d.withdrawals),
+        borderColor: '#f87171',
+        backgroundColor: '#f8717115',
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: 'Transfers',
+        data: monthly.map(d => d.transfers),
+        borderColor: '#9d8fff',
+        backgroundColor: '#9d8fff15',
+        tension: 0.4,
+        fill: true,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+      y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+    }
+  }
+});
+
+// Daily Active Users Line Chart
+new Chart(document.getElementById('dailyUsersChart'), {
+  type: 'line',
+  data: {
+    labels: dailyUsers.map(d => d.date),
+    datasets: [{
+      label: 'Active Users',
+      data: dailyUsers.map(d => d.users),
+      borderColor: '#fbbf24',
+      backgroundColor: '#fbbf2415',
+      tension: 0.4,
+      fill: true,
+      pointRadius: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 8 } },
+      y: { grid: { color: gridColor }, ticks: { color: tickColor, stepSize: 1 } }
+    }
+  }
+});
+
+// Transaction Type Doughnut
+const typeColors = {
+  deposit: '#34d399',
+  withdrawal: '#f87171',
+  transfer_out: '#9d8fff',
+  transfer_in: '#fbbf24',
+};
+new Chart(document.getElementById('typeChart'), {
+  type: 'doughnut',
+  data: {
+    labels: typeData.map(d => d.type),
+    datasets: [{
+      data: typeData.map(d => d.total),
+      backgroundColor: typeData.map(d => typeColors[d.type] || '#8a8a9a'),
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '65%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: tickColor, padding: 12, font: { size: 12 } }
+      }
+    }
+  }
+});
+</script>
 {% endblock %}
