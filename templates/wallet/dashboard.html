@@ -46,8 +46,7 @@
       {% for txn in recent_txns %}
       <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border);">
         <div style="display:flex; align-items:center; gap:12px;">
-          <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;
-            background:{% if txn.transaction_type == 'deposit' or txn.transaction_type == 'transfer_in' %}#1a2e25{% else %}#2e1a1a{% endif %};">
+          <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; background:{% if txn.transaction_type == 'deposit' or txn.transaction_type == 'transfer_in' %}#1a2e25{% else %}#2e1a1a{% endif %};">
             {% if txn.transaction_type == 'deposit' %}↓
             {% elif txn.transaction_type == 'withdrawal' %}↑
             {% elif txn.transaction_type == 'transfer_in' %}↙
