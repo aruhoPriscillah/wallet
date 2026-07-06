@@ -11,9 +11,10 @@ urlpatterns = [
     path('kyc/<int:doc_id>/', views.kyc_review, name='admin_kyc_review'),
     path('withdrawals/', views.withdrawals, name='admin_withdrawals'),
     path('withdrawals/<int:req_id>/', views.withdrawal_review, name='admin_withdrawal_review'),
-    path('transactions/', views.all_transactions, name='admin_transactions'),
+    path('transactions/', views.transactions, name='admin_transactions'),
     path('fraud/', views.fraud_monitoring, name='admin_fraud'),
     path('fraud/resolve/<int:flag_id>/', views.resolve_flag, name='admin_resolve_flag'),
     path('fraud/flag/<int:wallet_id>/', views.add_fraud_flag, name='admin_add_flag'),
     path('reports/', views.reports, name='admin_reports'),
+    path('export/', views.export_report, name='admin_export'),
 ]
