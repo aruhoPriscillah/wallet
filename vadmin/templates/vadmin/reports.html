@@ -5,22 +5,14 @@
 {% block extra_style %}
 <style>
   .report-card {
-    background: #1e1e2e;
-    border: 1px solid #3a3a50;
+    background: #f8f8fc;
+    border: 1px solid #e0e0ea;
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 16px;
   }
-  .report-card .card-title {
-    color: #c0c0d0;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 14px;
-  }
   .export-bar {
-    background: #252538;
+    background: #efeffa;
     border: 2px solid #7c6af7;
     border-radius: 12px;
     padding: 20px 24px;
@@ -31,32 +23,33 @@
     flex-wrap: wrap;
     gap: 14px;
   }
-  .export-bar .label { font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 3px; }
-  .export-bar .sub { font-size: 13px; color: #9090aa; }
+  .export-bar .label { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; }
+  .export-bar .sub { font-size: 13px; color: #6060a0; }
   .rstat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
-  .rstat { background: #1e1e2e; border: 1px solid #3a3a50; border-radius: 12px; padding: 18px; }
-  .rstat .label { font-size: 12px; color: #9090aa; margin-bottom: 6px; }
+  .rstat { background: #ffffff; border: 1px solid #dcdcec; border-radius: 12px; padding: 18px; }
+  .rstat .label { font-size: 12px; color: #7070a0; margin-bottom: 6px; }
   .rstat .value { font-size: 26px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -1px; }
-  .rstat .sub { font-size: 11px; color: #9090aa; margin-top: 4px; }
+  .rstat .sub { font-size: 11px; color: #9090b0; margin-top: 4px; }
   @media (max-width: 900px) { .rstat-grid { grid-template-columns: repeat(2,1fr); } }
-  .chart-wrap { background: #1e1e2e; border: 1px solid #3a3a50; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .chart-wrap { background: #ffffff; border: 1px solid #dcdcec; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
   .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-  .chart-title { font-size: 13px; font-weight: 600; color: #d0d0e0; letter-spacing: 0.05em; text-transform: uppercase; }
+  .chart-title { font-size: 13px; font-weight: 700; color: #2a2a4a; letter-spacing: 0.05em; text-transform: uppercase; }
   .legend { display: flex; gap: 14px; font-size: 12px; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
-  .breakdown-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #2a2a3a; font-size: 13px; }
+  .breakdown-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #e8e8f0; font-size: 13px; }
   .breakdown-row:last-child { border-bottom: none; }
   .rtable { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .rtable th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #9090aa; border-bottom: 1px solid #3a3a50; background: #16162a; }
-  .rtable td { padding: 12px; border-bottom: 1px solid #2a2a3a; color: #d0d0e0; vertical-align: middle; }
-  .rtable tr:hover td { background: #252538; }
+  .rtable th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #7070a0; border-bottom: 1px solid #e0e0ea; background: #f4f4fa; }
+  .rtable td { padding: 12px; border-bottom: 1px solid #ebebf5; color: #2a2a4a; vertical-align: middle; }
+  .rtable tr:hover td { background: #f4f4fa; }
   .rtable tr:last-child td { border-bottom: none; }
 </style>
 {% endblock %}
 
 {% block content %}
 
+<!-- Export Bar -->
 <!-- Export Bar -->
 <div class="export-bar">
   <div>
@@ -66,14 +59,14 @@
   <div style="display:flex; gap:10px; flex-wrap:wrap;">
     <a href="{% url 'admin_export' %}?type=transactions"
        style="display:inline-flex; align-items:center; gap:6px; padding:9px 18px;
-              background:#2a2a3a; border:1px solid #5a5a70; border-radius:8px;
-              color:#d0d0e0; font-size:13px; font-weight:600; text-decoration:none;">
+              background:#ffffff; border:1px solid #c0c0d8; border-radius:8px;
+              color:#4040a0; font-size:13px; font-weight:600; text-decoration:none;">
       📋 Transactions (30d)
     </a>
     <a href="{% url 'admin_export' %}?type=users"
        style="display:inline-flex; align-items:center; gap:6px; padding:9px 18px;
-              background:#2a2a3a; border:1px solid #5a5a70; border-radius:8px;
-              color:#d0d0e0; font-size:13px; font-weight:600; text-decoration:none;">
+              background:#ffffff; border:1px solid #c0c0d8; border-radius:8px;
+              color:#4040a0; font-size:13px; font-weight:600; text-decoration:none;">
       👥 All Users
     </a>
     <a href="{% url 'admin_export' %}?type=summary"
@@ -232,8 +225,8 @@ const monthly = {{ monthly_chart|safe }};
 const typeData = {{ type_chart|safe }};
 const dailyUsers = {{ daily_users_chart|safe }};
 
-const grid = '#2e2e42';
-const tick = '#9090aa';
+const grid = '#e8e8f0';
+const tick = '#8080a0';
 
 new Chart(document.getElementById('dailyVolumeChart'), {
   type: 'bar',
