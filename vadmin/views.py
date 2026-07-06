@@ -1,5 +1,10 @@
+import json
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
@@ -78,6 +83,7 @@ def admin_dashboard(request):
         'recent_flags': recent_flags,
         'chart_data': chart_data,
     })
+
 
 
 @admin_required
@@ -209,20 +215,17 @@ def withdrawal_review(request, req_id):
     return render(request, 'vadmin/withdrawal_review.html', {'req': req})
 
 
-@admin_required
-def all_transactions(request):
+@login_required
+def transactions(request):
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
     txn_type = request.GET.get('type', '')
-    query = request.GET.get('q', '')
-    txns = Transaction.objects.select_related('wallet__user').order_by('-created_at')
+    txns = wallet.transactions.all()
     if txn_type:
         txns = txns.filter(transaction_type=txn_type)
-    if query:
-        txns = txns.filter(
-            Q(wallet__user__username__icontains=query) |
-            Q(description__icontains=query)
-        )
-    return render(request, 'vadmin/transactions.html', {
-        'transactions': txns[:100], 'filter_type': txn_type, 'query': query
+    return render(request, 'wallet/transactions.html', {
+        'transactions': txns,
+        'wallet': wallet,
+        'filter_type': txn_type,
     })
 
 
@@ -258,33 +261,304 @@ def add_fraud_flag(request, wallet_id):
 
 @admin_required
 def reports(request):
-    from django.utils import timezone
+    from django.db.models.functions import TruncDay, TruncMonth
     now = timezone.now()
+    today = now.date()
     month_ago = now - timedelta(days=30)
+    year_ago = now - timedelta(days=365)
 
-    top_users = Wallet.objects.annotate(
-        txn_count=Count('transactions'),
-        txn_volume=Sum('transactions__amount')
-    ).order_by('-txn_volume')[:10]
-
+    # Summary totals (30 days)
     deposit_total = Transaction.objects.filter(
-        transaction_type='deposit', status='completed',
-        created_at__gte=month_ago
+        transaction_type='deposit', status='completed', created_at__gte=month_ago
     ).aggregate(t=Sum('amount'))['t'] or 0
 
     withdrawal_total = Transaction.objects.filter(
-        transaction_type='withdrawal', status='completed',
-        created_at__gte=month_ago
+        transaction_type='withdrawal', status='completed', created_at__gte=month_ago
     ).aggregate(t=Sum('amount'))['t'] or 0
 
     transfer_total = Transaction.objects.filter(
-        transaction_type='transfer_out', status='completed',
-        created_at__gte=month_ago
+        transaction_type='transfer_out', status='completed', created_at__gte=month_ago
     ).aggregate(t=Sum('amount'))['t'] or 0
 
+    total_revenue = deposit_total  # adjust if you charge fees
+
+    # Active users (made at least 1 transaction in last 30 days)
+    active_users = Wallet.objects.filter(
+        transactions__created_at__gte=month_ago,
+        transactions__status='completed'
+    ).distinct().count()
+
+    # Daily transaction volume (last 30 days)
+    daily_volume = Transaction.objects.filter(
+        status='completed', created_at__gte=month_ago
+    ).annotate(day=TruncDay('created_at')).values('day').annotate(
+        total=Sum('amount'), count=Count('id')
+    ).order_by('day')
+
+    daily_chart = [
+        {
+            'date': entry['day'].strftime('%b %d'),
+            'amount': float(entry['total']),
+            'count': entry['count']
+        }
+        for entry in daily_volume
+    ]
+
+    # Monthly income (last 12 months)
+    monthly_volume = Transaction.objects.filter(
+        status='completed', created_at__gte=year_ago
+    ).annotate(month=TruncMonth('created_at')).values('month').annotate(
+        deposits=Sum('amount', filter=Q(transaction_type='deposit')),
+        withdrawals=Sum('amount', filter=Q(transaction_type='withdrawal')),
+        transfers=Sum('amount', filter=Q(transaction_type='transfer_out')),
+        count=Count('id')
+    ).order_by('month')
+
+    monthly_chart = [
+        {
+            'month': entry['month'].strftime('%b %Y'),
+            'deposits': float(entry['deposits'] or 0),
+            'withdrawals': float(entry['withdrawals'] or 0),
+            'transfers': float(entry['transfers'] or 0),
+            'count': entry['count'],
+        }
+        for entry in monthly_volume
+    ]
+
+    # Top users by transaction volume
+    top_users = Wallet.objects.annotate(
+        txn_count=Count('transactions', filter=Q(transactions__status='completed')),
+        txn_volume=Sum('transactions__amount', filter=Q(transactions__status='completed'))
+    ).filter(txn_volume__isnull=False).order_by('-txn_volume')[:10]
+
+    # Transaction type breakdown
+    type_breakdown = Transaction.objects.filter(
+        status='completed', created_at__gte=month_ago
+    ).values('transaction_type').annotate(
+        total=Sum('amount'), count=Count('id')
+    ).order_by('-total')
+
+    type_chart = [
+        {'type': entry['transaction_type'], 'total': float(entry['total']), 'count': entry['count']}
+        for entry in type_breakdown
+    ]
+
+    # Daily active users (last 30 days)
+    daily_users = Transaction.objects.filter(
+        status='completed', created_at__gte=month_ago
+    ).annotate(day=TruncDay('created_at')).values('day').annotate(
+        users=Count('wallet', distinct=True)
+    ).order_by('day')
+
+    daily_users_chart = [
+        {'date': entry['day'].strftime('%b %d'), 'users': entry['users']}
+        for entry in daily_users
+    ]
+
     return render(request, 'vadmin/reports.html', {
-        'top_users': top_users,
         'deposit_total': deposit_total,
         'withdrawal_total': withdrawal_total,
         'transfer_total': transfer_total,
+        'total_revenue': total_revenue,
+        'active_users': active_users,
+        'top_users': top_users,
+        'daily_chart': json.dumps(daily_chart),
+        'monthly_chart': json.dumps(monthly_chart),
+        'type_chart': json.dumps(type_chart),
+        'daily_users_chart': json.dumps(daily_users_chart),
+        'type_breakdown': type_breakdown,
     })
+
+@admin_required
+def export_report(request):
+    report_type = request.GET.get('type', 'transactions')
+    month_ago = timezone.now() - timedelta(days=30)
+
+    wb = openpyxl.Workbook()
+
+    # Styles
+    header_font = Font(bold=True, color='FFFFFF', size=11)
+    header_fill = PatternFill(start_color='7C6AF7', end_color='7C6AF7', fill_type='solid')
+    title_font = Font(bold=True, size=14)
+    center = Alignment(horizontal='center')
+
+    def style_header_row(ws, row_num, col_count):
+        for col in range(1, col_count + 1):
+            cell = ws.cell(row=row_num, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center
+
+    if report_type == 'transactions':
+        ws = wb.active
+        ws.title = 'Transactions'
+
+        # Title
+        ws.merge_cells('A1:G1')
+        ws['A1'] = 'Vault — Transaction Report (Last 30 Days)'
+        ws['A1'].font = title_font
+        ws['A1'].alignment = center
+
+        ws.merge_cells('A2:G2')
+        ws['A2'] = f'Generated: {timezone.now().strftime("%B %d, %Y %H:%M")}'
+        ws['A2'].alignment = center
+
+        # Headers
+        headers = ['#', 'Username', 'Type', 'Amount (UGX)', 'Description', 'Status', 'Date']
+        for col, header in enumerate(headers, 1):
+            ws.cell(row=4, column=col, value=header)
+        style_header_row(ws, 4, len(headers))
+
+        # Data
+        txns = Transaction.objects.select_related('wallet__user').filter(
+            created_at__gte=month_ago
+        ).order_by('-created_at')
+
+        for row, txn in enumerate(txns, 5):
+            ws.cell(row=row, column=1, value=row - 4)
+            ws.cell(row=row, column=2, value=txn.wallet.user.username)
+            ws.cell(row=row, column=3, value=txn.transaction_type)
+            ws.cell(row=row, column=4, value=float(txn.amount))
+            ws.cell(row=row, column=5, value=txn.description)
+            ws.cell(row=row, column=6, value=txn.status)
+            ws.cell(row=row, column=7, value=txn.created_at.strftime('%Y-%m-%d %H:%M'))
+
+        # Column widths
+        ws.column_dimensions['A'].width = 6
+        ws.column_dimensions['B'].width = 20
+        ws.column_dimensions['C'].width = 18
+        ws.column_dimensions['D'].width = 18
+        ws.column_dimensions['E'].width = 35
+        ws.column_dimensions['F'].width = 12
+        ws.column_dimensions['G'].width = 20
+
+    elif report_type == 'users':
+        ws = wb.active
+        ws.title = 'Users'
+
+        ws.merge_cells('A1:F1')
+        ws['A1'] = 'Vault — Users Report'
+        ws['A1'].font = title_font
+        ws['A1'].alignment = center
+
+        ws.merge_cells('A2:F2')
+        ws['A2'] = f'Generated: {timezone.now().strftime("%B %d, %Y %H:%M")}'
+        ws['A2'].alignment = center
+
+        headers = ['#', 'Username', 'Full Name', 'Email', 'Balance (UGX)', 'Joined']
+        for col, header in enumerate(headers, 1):
+            ws.cell(row=4, column=col, value=header)
+        style_header_row(ws, 4, len(headers))
+
+        users = User.objects.select_related('wallet').order_by('-date_joined')
+        for row, user in enumerate(users, 5):
+            ws.cell(row=row, column=1, value=row - 4)
+            ws.cell(row=row, column=2, value=user.username)
+            ws.cell(row=row, column=3, value=user.get_full_name())
+            ws.cell(row=row, column=4, value=user.email)
+            try:
+                ws.cell(row=row, column=5, value=float(user.wallet.balance))
+            except:
+                ws.cell(row=row, column=5, value=0)
+            ws.cell(row=row, column=6, value=user.date_joined.strftime('%Y-%m-%d'))
+
+        ws.column_dimensions['A'].width = 6
+        ws.column_dimensions['B'].width = 20
+        ws.column_dimensions['C'].width = 25
+        ws.column_dimensions['D'].width = 30
+        ws.column_dimensions['E'].width = 18
+        ws.column_dimensions['F'].width = 15
+
+    elif report_type == 'summary':
+        ws = wb.active
+        ws.title = 'Summary'
+
+        ws.merge_cells('A1:C1')
+        ws['A1'] = 'Vault — Monthly Summary Report'
+        ws['A1'].font = title_font
+        ws['A1'].alignment = center
+
+        ws.merge_cells('A2:C2')
+        ws['A2'] = f'Generated: {timezone.now().strftime("%B %d, %Y %H:%M")}'
+        ws['A2'].alignment = center
+
+        # Summary stats
+        ws.cell(row=4, column=1, value='Metric')
+        ws.cell(row=4, column=2, value='Value (UGX)')
+        ws.cell(row=4, column=3, value='Period')
+        style_header_row(ws, 4, 3)
+
+        deposit_total = Transaction.objects.filter(
+            transaction_type='deposit', status='completed', created_at__gte=month_ago
+        ).aggregate(t=Sum('amount'))['t'] or 0
+
+        withdrawal_total = Transaction.objects.filter(
+            transaction_type='withdrawal', status='completed', created_at__gte=month_ago
+        ).aggregate(t=Sum('amount'))['t'] or 0
+
+        transfer_total = Transaction.objects.filter(
+            transaction_type='transfer_out', status='completed', created_at__gte=month_ago
+        ).aggregate(t=Sum('amount'))['t'] or 0
+
+        total_txns = Transaction.objects.filter(created_at__gte=month_ago).count()
+        total_users = User.objects.count()
+        active_users = Wallet.objects.filter(
+            transactions__created_at__gte=month_ago
+        ).distinct().count()
+        total_balance = Wallet.objects.aggregate(t=Sum('balance'))['t'] or 0
+
+        rows = [
+            ('Total Deposits', float(deposit_total), 'Last 30 days'),
+            ('Total Withdrawals', float(withdrawal_total), 'Last 30 days'),
+            ('Total Transfers', float(transfer_total), 'Last 30 days'),
+            ('Total Transactions', total_txns, 'Last 30 days'),
+            ('Total Users', total_users, 'All time'),
+            ('Active Users', active_users, 'Last 30 days'),
+            ('Total Wallet Balance', float(total_balance), 'Current'),
+        ]
+
+        for row_num, (metric, value, period) in enumerate(rows, 5):
+            ws.cell(row=row_num, column=1, value=metric)
+            ws.cell(row=row_num, column=2, value=value)
+            ws.cell(row=row_num, column=3, value=period)
+
+        # Top users sheet
+        ws2 = wb.create_sheet('Top Users')
+        ws2.merge_cells('A1:D1')
+        ws2['A1'] = 'Top Users by Transaction Volume'
+        ws2['A1'].font = title_font
+        ws2['A1'].alignment = center
+
+        headers2 = ['#', 'Username', 'Transaction Count', 'Total Volume (UGX)']
+        for col, header in enumerate(headers2, 1):
+            ws2.cell(row=3, column=col, value=header)
+        style_header_row(ws2, 3, len(headers2))
+
+        top_users = Wallet.objects.annotate(
+            txn_count=Count('transactions'),
+            txn_volume=Sum('transactions__amount')
+        ).filter(txn_volume__isnull=False).order_by('-txn_volume')[:20]
+
+        for row, w in enumerate(top_users, 4):
+            ws2.cell(row=row, column=1, value=row - 3)
+            ws2.cell(row=row, column=2, value=w.user.username)
+            ws2.cell(row=row, column=3, value=w.txn_count or 0)
+            ws2.cell(row=row, column=4, value=float(w.txn_volume or 0))
+
+        ws2.column_dimensions['A'].width = 6
+        ws2.column_dimensions['B'].width = 22
+        ws2.column_dimensions['C'].width = 22
+        ws2.column_dimensions['D'].width = 22
+
+        ws.column_dimensions['A'].width = 28
+        ws.column_dimensions['B'].width = 22
+        ws.column_dimensions['C'].width = 18
+
+    # File response
+    filename = f'vault_{report_type}_report_{timezone.now().strftime("%Y%m%d")}.xlsx'
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
