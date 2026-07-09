@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.db import transaction as db_transaction
 from django.db.models import Sum, Q
 from decimal import Decimal
-from .models import Wallet, Transaction, TransferRequest, Recipient, UtilityPayment
+from .models import Wallet, Transaction, TransferRequest, Recipient, UtilityPayment, Notification
 from .forms import RegisterForm, DepositForm, WithdrawForm, TransferForm, RecipientForm, UtilityPaymentForm
 import qrcode
 import io
@@ -80,6 +80,15 @@ def deposit(request):
                 wallet = request.user.wallet
                 wallet.balance += amount
                 wallet.save()
+                wallet.balance += amount
+                wallet.save()
+                Transaction.objects.create(...)
+                Notification.objects.create(
+                    wallet=wallet,
+                    title='Deposit Successful',
+                    message=f'UGX {amount:,.0f} has been added to your wallet. Description: {description}',
+                    notification_type='transaction',
+                )
                 Transaction.objects.create(
                     wallet=wallet,
                     transaction_type='deposit',
@@ -108,6 +117,15 @@ def withdraw(request):
                 with db_transaction.atomic():
                     wallet.balance -= amount
                     wallet.save()
+                    wallet.balance -= amount
+                    wallet.save()
+                    Transaction.objects.create(...)
+                    Notification.objects.create(
+                        wallet=wallet,
+                        title='Withdrawal Successful',
+                        message=f'UGX {amount:,.0f} has been withdrawn from your wallet.',
+                        notification_type='transaction',
+                    )
                     Transaction.objects.create(
                         wallet=wallet,
                         transaction_type='withdrawal',
@@ -159,6 +177,20 @@ def transfer(request):
                                 amount=amount,
                                 description=f'Transfer from @{request.user.username}: {note}',
                                 status='completed',
+                            )
+                            Transaction.objects.create(wallet=sender_wallet,)
+                            Transaction.objects.create(wallet=receiver_wallet,)
+                            Notification.objects.create(
+                                wallet=sender_wallet,
+                                title='Transfer Sent',
+                                message=f'You sent UGX {amount:,.0f} to @{username}. Note: {note}',
+                                notification_type='transaction',
+                            )
+                            Notification.objects.create(
+                                wallet=receiver_wallet,
+                                title='Money Received',
+                                message=f'You received UGX {amount:,.0f} from @{request.user.username}.',
+                                notification_type='transaction',
                             )
                         messages.success(request, f'UGX {amount:,.0f} sent to @{username}.')
                         return redirect('dashboard')
@@ -306,4 +338,14 @@ def utility_history(request):
         'payments': payments,
         'wallet': wallet,
         'filter_category': category,
+    })
+
+@login_required
+def notifications(request):
+    wallet = request.user.wallet
+    notifs = wallet.notifications.all()
+    wallet.notifications.filter(is_read=False).update(is_read=True)
+    return render(request, 'wallet/notifications.html', {
+        'notifications': notifs,
+        'wallet': wallet,
     })

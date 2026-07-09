@@ -1,0 +1,63 @@
+{% extends 'wallet/base.html' %}
+{% block title %}Transaction History — Vault{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <h1>Transaction History</h1>
+    <p>All your wallet activity</p>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+    <a href="{% url 'transactions' %}" class="btn {% if not filter_type %}btn-primary{% else %}btn-ghost{% endif %}" style="font-size:13px; padding:7px 14px;">All</a>
+    <a href="?type=deposit" class="btn {% if filter_type == 'deposit' %}btn-primary{% else %}btn-ghost{% endif %}" style="font-size:13px; padding:7px 14px;">💰 Deposits</a>
+    <a href="?type=withdrawal" class="btn {% if filter_type == 'withdrawal' %}btn-primary{% else %}btn-ghost{% endif %}" style="font-size:13px; padding:7px 14px;">💸 Withdrawals</a>
+    <a href="?type=transfer_in" class="btn {% if filter_type == 'transfer_in' %}btn-primary{% else %}btn-ghost{% endif %}" style="font-size:13px; padding:7px 14px;">↙ Received</a>
+    <a href="?type=transfer_out" class="btn {% if filter_type == 'transfer_out' %}btn-primary{% else %}btn-ghost{% endif %}" style="font-size:13px; padding:7px 14px;">↗ Sent</a>
+  </div>
+
+  <div class="card">
+    {% if transactions %}
+      {% for txn in transactions %}
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+            background:{% if txn.transaction_type == 'deposit' or txn.transaction_type == 'transfer_in' %}#1a2e25{% else %}#2e1a1a{% endif %};">
+            {% if txn.transaction_type == 'deposit' %}💰
+            {% elif txn.transaction_type == 'withdrawal' %}💸
+            {% elif txn.transaction_type == 'transfer_in' %}↙
+            {% else %}↗{% endif %}
+          </div>
+          <div>
+            <div style="font-size:14px; font-weight:500;">
+              {{ txn.description|default:txn.get_transaction_type_display }}
+            </div>
+            <div style="font-size:12px; color:var(--muted); margin-top:2px;">
+              {{ txn.created_at|date:"M d, Y · g:i A" }}
+              &nbsp;·&nbsp;
+              <span class="badge {% if txn.status == 'completed' %}badge-green{% elif txn.status == 'failed' %}badge-red{% else %}badge-yellow{% endif %}">
+                {{ txn.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right; flex-shrink:0;">
+          <div style="font-family:var(--mono); font-size:16px; font-weight:500;"
+            class="{% if txn.transaction_type == 'deposit' or txn.transaction_type == 'transfer_in' %}text-green{% else %}text-red{% endif %}">
+            {% if txn.transaction_type == 'deposit' or txn.transaction_type == 'transfer_in' %}+{% else %}-{% endif %}UGX {{ txn.amount|floatformat:0 }}
+          </div>
+          <div style="font-size:11px; color:var(--muted); font-family:var(--mono); margin-top:2px;">
+            {{ txn.id|truncatechars:12 }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center; padding:48px 0; color:var(--muted); font-size:14px;">
+        No transactions found.<br><br>
+        <a href="{% url 'deposit' %}" class="btn btn-primary" style="font-size:13px;">Make a deposit</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

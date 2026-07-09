@@ -15,4 +15,5 @@ urlpatterns = [
     path('qr/', views.qr_code, name='qr_code'),
     path('utilities/', views.utilities, name='utilities'),
     path('utilities/history/', views.utility_history, name='utility_history'),
+    path('notifications/', views.notifications, name='notifications'),
 ]

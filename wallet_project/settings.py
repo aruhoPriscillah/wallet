@@ -18,8 +18,8 @@ INSTALLED_APPS = [
     'allauth.account',            
     'allauth.socialaccount',      
     'allauth.socialaccount.providers.google', 
-    'wallet',
-    'vadmin',
+    'wallet.apps.WalletConfig',
+    'vadmin.apps.VadminConfig',
 ]
 
 SITE_ID = int(os.environ.get('SITE_ID', 2))
@@ -90,6 +90,12 @@ SOCIALACCOUNT_PROVIDERS = {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
         'OAUTH_PKCE_ENABLED': True,
+        'VERIFIED_EMAIL': True,
+        'FETCH_USERINFO': True,
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID', ''),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),
+        }
     }
 }
 

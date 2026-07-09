@@ -215,19 +215,23 @@ def withdrawal_review(request, req_id):
     return render(request, 'vadmin/withdrawal_review.html', {'req': req})
 
 
-@login_required
+@admin_required
 def transactions(request):
-    wallet, _ = Wallet.objects.get_or_create(user=request.user)
     txn_type = request.GET.get('type', '')
-    txns = wallet.transactions.all()
+    query = request.GET.get('q', '')
+    txns = Transaction.objects.select_related('wallet__user').order_by('-created_at')
     if txn_type:
         txns = txns.filter(transaction_type=txn_type)
-    return render(request, 'wallet/transactions.html', {
-        'transactions': txns,
-        'wallet': wallet,
+    if query:
+        txns = txns.filter(
+            Q(wallet__user__username__icontains=query) |
+            Q(description__icontains=query)
+        )
+    return render(request, 'vadmin/transactions.html', {
+        'transactions': txns[:100],
         'filter_type': txn_type,
+        'query': query,
     })
-
 
 @admin_required
 def fraud_monitoring(request):

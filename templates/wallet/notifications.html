@@ -1,48 +1,111 @@
 {% extends 'wallet/base.html' %}
+
 {% block title %}Notifications — Vault{% endblock %}
+
 {% block content %}
 <div class="page">
-  <div class="page-header">
-    <h1>Notifications</h1>
-    <p>Your recent alerts and updates</p>
-  </div>
 
-  <div class="card">
-    {% if notifications %}
-      {% for n in notifications %}
-      <div style="display:flex; align-items:flex-start; gap:14px; padding:14px 0;
-                  border-bottom:1px solid var(--border);
-                  {% if n.is_read %}opacity:0.6;{% else %}opacity:1;{% endif %}">
-        <div style="width:38px; height:38px; border-radius:50%; flex-shrink:0;
-                    display:flex; align-items:center; justify-content:center; font-size:16px;
-                    {% if n.notification_type == 'transaction' %}background:#1a2e25;{% elif n.notification_type == 'security' %}background:#2e1a1a;{% elif n.notification_type == 'budget' %}background:#2e2a1a;{% else %}background:#1e1a2e;{% endif %}">
-          {% if n.notification_type == 'transaction' %}💸
-          {% elif n.notification_type == 'security' %}🔒
-          {% elif n.notification_type == 'budget' %}📊
-          {% elif n.notification_type == 'kyc' %}🪪
-          {% elif n.notification_type == 'savings' %}🏦
-          {% else %}🔔{% endif %}
-        </div>
-        <div style="flex:1;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:14px; {% if not n.is_read %}font-weight:600;{% else %}font-weight:400;{% endif %}">
-              {{ n.title }}
-              {% if not n.is_read %}
-              <span style="display:inline-block; width:7px; height:7px; background:var(--accent); border-radius:50%; margin-left:6px; vertical-align:middle;"></span>
-              {% endif %}
+    <div class="page-header">
+        <h1>Notifications</h1>
+        <p>Your recent alerts and updates</p>
+    </div>
+
+    <div class="card">
+
+        {% if notifications %}
+
+            {% for n in notifications %}
+
+                <div
+                    style="
+                        display:flex;
+                        align-items:flex-start;
+                        gap:14px;
+                        padding:14px 0;
+                        border-bottom:1px solid var(--border);
+                    "
+                    {% if n.is_read %}
+                        style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);opacity:.6;"
+                    {% else %}
+                        style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);opacity:1;"
+                    {% endif %}
+                >
+
+                    <div
+                        {% if n.notification_type == 'transaction' %}
+                            style="width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:#1a2e25;"
+                        {% elif n.notification_type == 'security' %}
+                            style="width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:#2e1a1a;"
+                        {% elif n.notification_type == 'budget' %}
+                            style="width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:#2e2a1a;"
+                        {% else %}
+                            style="width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:#1e1a2e;"
+                        {% endif %}
+                    >
+
+                        {% if n.notification_type == 'transaction' %}
+                            💸
+                        {% elif n.notification_type == 'security' %}
+                            🔒
+                        {% elif n.notification_type == 'budget' %}
+                            📊
+                        {% elif n.notification_type == 'kyc' %}
+                            🪪
+                        {% elif n.notification_type == 'savings' %}
+                            🏦
+                        {% else %}
+                            🔔
+                        {% endif %}
+
+                    </div>
+
+                    <div style="flex:1;">
+
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+
+                            <div
+                                {% if not n.is_read %}
+                                    style="font-size:14px;font-weight:600;"
+                                {% else %}
+                                    style="font-size:14px;font-weight:400;"
+                                {% endif %}
+                            >
+                                {{ n.title }}
+
+                                {% if not n.is_read %}
+                                    <span style="display:inline-block;width:7px;height:7px;background:var(--accent);border-radius:50%;margin-left:6px;vertical-align:middle;"></span>
+                                {% endif %}
+                            </div>
+
+                            <div style="font-size:11px;color:var(--muted);">
+                                {{ n.created_at|timesince }} ago
+                            </div>
+
+                        </div>
+
+                        <div style="font-size:13px;color:var(--muted);margin-top:3px;">
+                            {{ n.message }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div style="text-align:center;padding:48px 0;color:var(--muted);font-size:14px;">
+                🔔 No notifications yet.
+                <br><br>
+                <span style="font-size:12px;">
+                    We'll notify you about transactions, security alerts, and more.
+                </span>
             </div>
-            <div style="font-size:11px; color:var(--muted);">{{ n.created_at|timesince }} ago</div>
-          </div>
-          <div style="font-size:13px; color:var(--muted); margin-top:3px;">{{ n.message }}</div>
-        </div>
-      </div>
-      {% endfor %}
-    {% else %}
-      <div style="text-align:center; padding:48px 0; color:var(--muted); font-size:14px;">
-        🔔 No notifications yet.<br><br>
-        <span style="font-size:12px;">We'll notify you about transactions, security alerts, and more.</span>
-      </div>
-    {% endif %}
-  </div>
+
+        {% endif %}
+
+    </div>
+
 </div>
 {% endblock %}
