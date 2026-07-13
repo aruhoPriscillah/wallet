@@ -231,7 +231,19 @@
       <a href="{% url 'transfer' %}" {% if request.resolver_match.url_name == 'transfer' %}class="active"{% endif %}>Send</a>
       <a href="{% url 'transactions' %}" {% if request.resolver_match.url_name == 'transactions' %}class="active"{% endif %}>History</a>
       <a href="{% url 'recipients' %}" {% if request.resolver_match.url_name == 'recipients' %}class="active"{% endif %}>Recipients</a>
-      <a href="{% url 'qr_code' %}" {% if request.resolver_match.url_name == 'qr_code' %}class="active"{% endif %}>QR Code</a>
+    <a href="{% url 'qr_code' %}" {% if request.resolver_match.url_name == 'qr_code' %}class="active"{% endif %}>
+  <span class="nav-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="7" height="7"/>
+      <rect x="14" y="3" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/>
+      <rect x="14" y="14" width="3" height="3"/>
+      <rect x="19" y="14" width="2" height="2"/>
+      <rect x="14" y="19" width="2" height="2"/>
+      <rect x="18" y="18" width="3" height="3"/>
+    </svg>
+  </span> QR Code
+</a>
       <a href="{% url 'utilities' %}" {% if request.resolver_match.url_name == 'utilities' %}class="active"{% endif %}>Bills</a>
       <a href="{% url 'notifications' %}" {% if request.resolver_match.url_name == 'notifications' %}class="active"{% endif %}>Notifications</a>
     </div>
