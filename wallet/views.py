@@ -1,14 +1,14 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db import transaction as db_transaction
-from django.db.models import Sum, Q
-from decimal import Decimal
-from .models import Wallet, Transaction, TransferRequest, Recipient, UtilityPayment, Notification
+from django.db.models import Sum
+from .models import Wallet, Transaction, Recipient, UtilityPayment, Notification
 from .forms import RegisterForm, DepositForm, WithdrawForm, TransferForm, RecipientForm, UtilityPaymentForm
+from .emails import (send_deposit_email, send_withdrawal_email, send_transfer_sent_email, send_transfer_received_email)
 import qrcode
 import io
 import base64
@@ -22,7 +22,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             Wallet.objects.get_or_create(user=user)
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')  # add backend here
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             messages.success(request, f'Welcome, {user.first_name}! Your wallet is ready.')
             return redirect('dashboard')
     else:
@@ -37,7 +37,7 @@ def login_view(request):
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('dashboard')
         else:
             messages.error(request, 'Invalid username or password.')
@@ -53,7 +53,7 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    wallet = request.user.wallet
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
     recent_txns = wallet.transactions.all()[:5]
     total_in = wallet.transactions.filter(
         transaction_type__in=['deposit', 'transfer_in'], status='completed'
@@ -80,15 +80,6 @@ def deposit(request):
                 wallet = request.user.wallet
                 wallet.balance += amount
                 wallet.save()
-                wallet.balance += amount
-                wallet.save()
-                Transaction.objects.create(...)
-                Notification.objects.create(
-                    wallet=wallet,
-                    title='Deposit Successful',
-                    message=f'UGX {amount:,.0f} has been added to your wallet. Description: {description}',
-                    notification_type='transaction',
-                )
                 Transaction.objects.create(
                     wallet=wallet,
                     transaction_type='deposit',
@@ -96,11 +87,18 @@ def deposit(request):
                     description=description,
                     status='completed',
                 )
-            messages.success(request, f'UGX{amount:,.2f} deposited successfully.')
+                Notification.objects.create(
+                    wallet=wallet,
+                    title='Deposit Successful',
+                    message=f'UGX {amount:,.0f} has been added to your wallet.',
+                    notification_type='transaction',
+                )
+            send_deposit_email(request.user, amount, wallet.balance)
+            messages.success(request, f'UGX {amount:,.0f} deposited successfully.')
             return redirect('dashboard')
     else:
         form = DepositForm()
-    return render(request, 'wallet/deposit.html', {'form': form})
+    return render(request, 'wallet/deposit.html', {'form': form, 'wallet': request.user.wallet})
 
 
 @login_required
@@ -117,15 +115,6 @@ def withdraw(request):
                 with db_transaction.atomic():
                     wallet.balance -= amount
                     wallet.save()
-                    wallet.balance -= amount
-                    wallet.save()
-                    Transaction.objects.create(...)
-                    Notification.objects.create(
-                        wallet=wallet,
-                        title='Withdrawal Successful',
-                        message=f'UGX {amount:,.0f} has been withdrawn from your wallet.',
-                        notification_type='transaction',
-                    )
                     Transaction.objects.create(
                         wallet=wallet,
                         transaction_type='withdrawal',
@@ -133,7 +122,14 @@ def withdraw(request):
                         description=description,
                         status='completed',
                     )
-                messages.success(request, f'UGX{amount:,.2f} withdrawn successfully.')
+                    Notification.objects.create(
+                        wallet=wallet,
+                        title='Withdrawal Successful',
+                        message=f'UGX {amount:,.0f} has been withdrawn from your wallet.',
+                        notification_type='transaction',
+                    )
+                send_withdrawal_email(request.user, amount, wallet.balance)
+                messages.success(request, f'UGX {amount:,.0f} withdrawn successfully.')
                 return redirect('dashboard')
     else:
         form = WithdrawForm()
@@ -178,12 +174,10 @@ def transfer(request):
                                 description=f'Transfer from @{request.user.username}: {note}',
                                 status='completed',
                             )
-                            Transaction.objects.create(wallet=sender_wallet,)
-                            Transaction.objects.create(wallet=receiver_wallet,)
                             Notification.objects.create(
                                 wallet=sender_wallet,
                                 title='Transfer Sent',
-                                message=f'You sent UGX {amount:,.0f} to @{username}. Note: {note}',
+                                message=f'You sent UGX {amount:,.0f} to @{username}.',
                                 notification_type='transaction',
                             )
                             Notification.objects.create(
@@ -192,6 +186,8 @@ def transfer(request):
                                 message=f'You received UGX {amount:,.0f} from @{request.user.username}.',
                                 notification_type='transaction',
                             )
+                        send_transfer_sent_email(request.user, amount, username, sender_wallet.balance)
+                        send_transfer_received_email(recipient, amount, request.user.username, receiver_wallet.balance)
                         messages.success(request, f'UGX {amount:,.0f} sent to @{username}.')
                         return redirect('dashboard')
                 except User.DoesNotExist:
@@ -208,7 +204,7 @@ def transfer(request):
 
 @login_required
 def transactions(request):
-    wallet = request.user.wallet
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
     txn_type = request.GET.get('type', '')
     txns = wallet.transactions.all()
     if txn_type:
@@ -228,7 +224,6 @@ def recipients(request):
         if form.is_valid():
             name = form.cleaned_data['name']
             username = form.cleaned_data['username']
-            # check the user actually exists
             if not User.objects.filter(username=username).exists():
                 messages.error(request, f'No user found with username "{username}".')
             elif username == request.user.username:
@@ -244,11 +239,9 @@ def recipients(request):
                     messages.error(request, f'@{username} is already in your recipients.')
     else:
         form = RecipientForm()
-
-    all_recipients = wallet.recipients.all()
     return render(request, 'wallet/recipients.html', {
         'form': form,
-        'recipients': all_recipients,
+        'recipients': wallet.recipients.all(),
     })
 
 
@@ -263,27 +256,25 @@ def delete_recipient(request, recipient_id):
         messages.error(request, 'Recipient not found.')
     return redirect('recipients')
 
+
 @login_required
 def qr_code(request):
     username = request.user.username
-    # URL that pre-fills the transfer form with this user's username
     transfer_url = request.build_absolute_uri(f'/transfer/?to={username}')
-
     qr = qrcode.QRCode(box_size=8, border=4)
     qr.add_data(transfer_url)
     qr.make(fit=True)
     img = qr.make_image(fill_color="#7c6af7", back_color="#18181c")
-
     buffer = io.BytesIO()
     img.save(buffer, format='PNG')
     buffer.seek(0)
     qr_b64 = base64.b64encode(buffer.getvalue()).decode()
-
     return render(request, 'wallet/qr_code.html', {
         'qr_b64': qr_b64,
         'username': username,
         'transfer_url': transfer_url,
     })
+
 
 @login_required
 def utilities(request):
@@ -296,7 +287,6 @@ def utilities(request):
             account_number = form.cleaned_data['account_number']
             amount = form.cleaned_data['amount']
             note = form.cleaned_data.get('note', '')
-
             if wallet.balance < amount:
                 messages.error(request, 'Insufficient balance.')
             else:
@@ -323,7 +313,6 @@ def utilities(request):
                 return redirect('utility_history')
     else:
         form = UtilityPaymentForm()
-
     return render(request, 'wallet/utilities.html', {'form': form, 'wallet': wallet})
 
 
@@ -339,6 +328,7 @@ def utility_history(request):
         'wallet': wallet,
         'filter_category': category,
     })
+
 
 @login_required
 def notifications(request):
