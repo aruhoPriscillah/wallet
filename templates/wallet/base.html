@@ -24,34 +24,19 @@
       --radius: 14px;
       --mono: 'DM Mono', monospace;
       --sans: 'DM Sans', sans-serif;
+      --sidebar-w: 230px;
     }
 
     body.light {
-  --bg: #f5f5f7;
-  --surface: #ffffff;
-  --surface2: #e8e8ed;
-  --border: #d1d1d6;
-  --text: #1c1c1e;
-  --muted: #6e6e73;
-  --accent: #5e4fd6;
-  --accent-light: #7c6af7;
-}
-
-.theme-toggle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-.theme-toggle:hover { border-color: var(--accent); }
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --surface2: #e8e8ed;
+      --border: #d1d1d6;
+      --text: #1c1c1e;
+      --muted: #6e6e73;
+      --accent: #5e4fd6;
+      --accent-light: #7c6af7;
+    }
 
     body {
       background: var(--bg);
@@ -60,129 +45,81 @@
       font-size: 15px;
       line-height: 1.6;
       min-height: 100vh;
+      display: flex;
     }
 
     a { color: var(--accent-light); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    /* NAV */
-    nav {
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 32px;
-      height: 60px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg);
-      position: sticky;
-      top: 0;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
       z-index: 100;
     }
-    .nav-brand {
-      font-family: var(--mono);
-      font-size: 17px;
-      font-weight: 500;
-      color: var(--text);
-      letter-spacing: -0.5px;
+    .sidebar-brand { padding: 24px 20px 18px; border-bottom: 1px solid var(--border); }
+    .sidebar-brand .logo { font-family: var(--mono); font-size: 20px; font-weight: 500; color: var(--text); letter-spacing: -0.5px; }
+    .sidebar-brand .logo span { color: var(--accent-light); }
+    .sidebar-brand .tagline { font-size: 10px; color: var(--muted); margin-top: 3px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .sidebar-nav { padding: 10px; flex: 1; }
+    .nav-section { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 14px 10px 5px; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 9px; color: var(--muted);
+      font-size: 14px; font-weight: 500; margin-bottom: 2px;
+      transition: all 0.15s; text-decoration: none;
     }
-    .nav-brand span { color: var(--accent-light); }
-    .nav-links { display: flex; gap: 4px; align-items: center; }
-    .nav-links a {
-      padding: 6px 14px;
-      border-radius: 8px;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.15s;
-    }
-    .nav-links a:hover { color: var(--text); background: var(--surface); text-decoration: none; }
-    .nav-links a.active { color: var(--text); background: var(--surface2); }
-    .nav-logout {
-      padding: 6px 14px;
-      border-radius: 8px;
-      background: var(--surface2);
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 500;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .nav-logout:hover { color: var(--red); border-color: var(--red); }
+    .sidebar-nav a:hover { background: var(--surface2); color: var(--text); text-decoration: none; }
+    .sidebar-nav a.active { background: var(--surface2); color: var(--accent-light); }
+    .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+    .sidebar-footer { padding: 14px 10px; border-top: 1px solid var(--border); }
+    .user-info { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; background: var(--surface2); margin-bottom: 8px; }
+    .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .user-email { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .footer-btns { display: flex; gap: 6px; }
+    .footer-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 6px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: var(--sans); transition: all 0.15s; text-decoration: none; }
+    .footer-btn:hover { color: var(--text); border-color: var(--accent); background: var(--surface2); text-decoration: none; }
+    .footer-btn.danger:hover { color: var(--red); border-color: var(--red); background: transparent; }
 
-    /* LAYOUT */
-    .page { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
-    .page-sm { max-width: 460px; margin: 0 auto; padding: 60px 24px; }
+    .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 54px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .topbar-left { font-size: 13px; color: var(--muted); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .bell-btn { position: relative; width: 34px; height: 34px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 15px; text-decoration: none; transition: all 0.15s; }
+    .bell-btn:hover { border-color: var(--accent); text-decoration: none; }
+    .bell-badge { position: absolute; top: -2px; right: -2px; background: var(--red); color: #fff; font-size: 9px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .theme-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all 0.15s; }
+    .theme-btn:hover { border-color: var(--accent); }
+    .menu-toggle { display: none; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; font-size: 16px; color: var(--text); }
 
-    /* CARDS */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-    }
-    .card-title {
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    /* FORMS */
+    .page { max-width: 880px; margin: 0 auto; padding: 36px 28px; }
+    .page-sm { max-width: 460px; margin: 0 auto; padding: 40px 28px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
     .form-group { margin-bottom: 18px; }
     label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
-    input[type=text], input[type=email], input[type=password], input[type=number] {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
-      color: var(--text);
-      font-family: var(--sans);
-      font-size: 15px;
-      outline: none;
-      transition: border 0.15s;
-    }
+    input[type=text], input[type=email], input[type=password], input[type=number] { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: var(--sans); font-size: 15px; outline: none; transition: border 0.15s; }
     input:focus { border-color: var(--accent); }
     input::placeholder { color: var(--muted); }
-
-    /* BUTTONS */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border-radius: 9px;
-      font-family: var(--sans);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: all 0.15s;
-    }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: 9px; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
     .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent-light); }
+    .btn-primary:hover { background: var(--accent-light); text-decoration: none; }
     .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-    .btn-ghost:hover { border-color: var(--accent); color: var(--accent-light); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent-light); text-decoration: none; }
     .btn-full { width: 100%; }
     .btn-danger { background: var(--red); color: #fff; }
-
-    /* MESSAGES */
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
     .messages { margin-bottom: 20px; }
-    .msg {
-      padding: 12px 16px;
-      border-radius: 9px;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
+    .msg { padding: 12px 16px; border-radius: 9px; font-size: 14px; margin-bottom: 8px; }
     .msg-success { background: #1a2e25; border: 1px solid #34d39940; color: var(--green); }
     .msg-error { background: #2e1a1a; border: 1px solid #f8717140; color: var(--red); }
     .msg-info { background: #1c1a2e; border: 1px solid var(--accent); color: var(--accent-light); }
-
-    /* MISC */
     .mono { font-family: var(--mono); }
     .text-muted { color: var(--muted); }
     .text-green { color: var(--green); }
@@ -191,72 +128,124 @@
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
-
     .errorlist { list-style: none; color: var(--red); font-size: 13px; margin-top: 4px; }
-
-    /* PAGE HEADER */
     .page-header { margin-bottom: 28px; }
     .page-header h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; }
     .page-header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
-
-    /* DIVIDER */
     hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-
-    /* BADGE */
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 100px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
     .badge-green { background: #1a2e25; color: var(--green); }
     .badge-red { background: #2e1a1a; color: var(--red); }
     .badge-purple { background: #1e1a2e; color: var(--accent-light); }
     .badge-yellow { background: #2e2a1a; color: var(--yellow); }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .menu-toggle { display: flex; }
+    }
   </style>
   {% block extra_style %}{% endblock %}
 </head>
-
 <body>
-  {% if user.is_authenticated %}
-  <nav>
-    <div class="nav-brand">vault<span>.</span></div>
-    <div class="nav-links">
-      <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
-      <a href="{% url 'deposit' %}" {% if request.resolver_match.url_name == 'deposit' %}class="active"{% endif %}>Deposit</a>
-      <a href="{% url 'withdraw' %}" {% if request.resolver_match.url_name == 'withdraw' %}class="active"{% endif %}>Withdraw</a>
-      <a href="{% url 'transfer' %}" {% if request.resolver_match.url_name == 'transfer' %}class="active"{% endif %}>Send</a>
-      <a href="{% url 'transactions' %}" {% if request.resolver_match.url_name == 'transactions' %}class="active"{% endif %}>History</a>
-      <a href="{% url 'recipients' %}" {% if request.resolver_match.url_name == 'recipients' %}class="active"{% endif %}>Recipients</a>
+
+{% if user.is_authenticated %}
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">vault<span>.</span></div>
+    <div class="tagline">Digital Wallet</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Main</div>
+    <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>
+      <span class="nav-icon">🏠</span> Dashboard
+    </a>
+
+    <div class="nav-section">Money</div>
+    <a href="{% url 'deposit' %}" {% if request.resolver_match.url_name == 'deposit' %}class="active"{% endif %}>
+      <span class="nav-icon">💰</span> Deposit
+    </a>
+    <a href="{% url 'withdraw' %}" {% if request.resolver_match.url_name == 'withdraw' %}class="active"{% endif %}>
+      <span class="nav-icon">💸</span> Withdraw
+    </a>
+    <a href="{% url 'transfer' %}" {% if request.resolver_match.url_name == 'transfer' %}class="active"{% endif %}>
+      <span class="nav-icon">↗️</span> Send Money
+    </a>
+    <a href="{% url 'utilities' %}" {% if request.resolver_match.url_name == 'utilities' %}class="active"{% endif %}>
+      <span class="nav-icon">🧾</span> Pay Bills
+    </a>
+
+    <div class="nav-section">Account</div>
+    <a href="{% url 'transactions' %}" {% if request.resolver_match.url_name == 'transactions' %}class="active"{% endif %}>
+      <span class="nav-icon">📋</span> History
+    </a>
+    <a href="{% url 'recipients' %}" {% if request.resolver_match.url_name == 'recipients' %}class="active"{% endif %}>
+      <span class="nav-icon">👥</span> Recipients
+    </a>
     <a href="{% url 'qr_code' %}" {% if request.resolver_match.url_name == 'qr_code' %}class="active"{% endif %}>
-  <span class="nav-icon">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="7" height="7"/>
-      <rect x="14" y="3" width="7" height="7"/>
-      <rect x="3" y="14" width="7" height="7"/>
-      <rect x="14" y="14" width="3" height="3"/>
-      <rect x="19" y="14" width="2" height="2"/>
-      <rect x="14" y="19" width="2" height="2"/>
-      <rect x="18" y="18" width="3" height="3"/>
-    </svg>
-  </span> QR Code
-</a>
-      <a href="{% url 'utilities' %}" {% if request.resolver_match.url_name == 'utilities' %}class="active"{% endif %}>Bills</a>
-      <a href="{% url 'notifications' %}" {% if request.resolver_match.url_name == 'notifications' %}class="active"{% endif %}>Notifications</a>
-    </div>
-    <form method="post" action="{% url 'logout' %}">
-      {% csrf_token %}
-      <button type="submit" class="nav-logout">Logout</button>
-    </form>
-    <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+      <span class="nav-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/>
+          <rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/>
+          <rect x="18" y="18" width="3" height="3"/>
+        </svg>
+      </span> QR Code
+    </a>
+    <a href="{% url 'notifications' %}" {% if request.resolver_match.url_name == 'notifications' %}class="active"{% endif %}>
+      <span class="nav-icon">🔔</span> Notifications
+      {% if unread_notifications_count %}
+        <span style="margin-left:auto; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:1px 7px; border-radius:100px;">{{ unread_notifications_count }}</span>
+      {% endif %}
+    </a>
+
+    {% if user.is_staff %}
+    <div class="nav-section">Admin</div>
+    <a href="{% url 'admin_dashboard' %}">
+      <span class="nav-icon">⚙️</span> Admin Panel
+    </a>
+    {% endif %}
   </nav>
-  {% endif %}
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">{{ user.first_name|first|upper|default:user.username|first|upper }}</div>
+      <div style="overflow:hidden; min-width:0;">
+        <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+        <div class="user-email">{{ user.email|truncatechars:22 }}</div>
+      </div>
+    </div>
+    <div class="footer-btns">
+      <button class="footer-btn" id="themeToggle">🌙 Theme</button>
+      <form method="post" action="{% url 'logout' %}" style="flex:1;">
+        {% csrf_token %}
+        <button type="submit" class="footer-btn danger" style="width:100%;">🚪 Logout</button>
+      </form>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <span class="topbar-left">Welcome back, <strong>{{ user.first_name|default:user.username }}</strong></span>
+    </div>
+    <div class="topbar-right">
+      <a href="{% url 'notifications' %}" class="bell-btn">
+        🔔
+        {% if unread_notifications_count %}
+          <span class="bell-badge">{{ unread_notifications_count }}</span>
+        {% endif %}
+      </a>
+      <button class="theme-btn" id="themeToggle2">🌙</button>
+    </div>
+  </div>
 
   {% if messages %}
-  <div style="max-width:900px;margin:16px auto;padding:0 24px;">
+  <div style="padding:16px 28px 0;">
     <div class="messages">
       {% for message in messages %}
         <div class="msg {% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% else %}msg-info{% endif %}">{{ message }}</div>
@@ -266,23 +255,32 @@
   {% endif %}
 
   {% block content %}{% endblock %}
+</div>
 
-  <script>
-  const toggle = document.getElementById('themeToggle');
-  const body = document.body;
+{% else %}
+  {% block content %}{% endblock %}
+{% endif %}
 
-  // Load saved preference
-  if (localStorage.getItem('theme') === 'light') {
-    body.classList.add('light');
-    toggle.textContent = '☀️';
+<script>
+  function applyTheme(light) {
+    document.body.classList.toggle('light', light);
+    const t1 = document.getElementById('themeToggle');
+    const t2 = document.getElementById('themeToggle2');
+    if (t1) t1.textContent = (light ? '☀️' : '🌙') + ' Theme';
+    if (t2) t2.textContent = light ? '☀️' : '🌙';
   }
-
-  toggle.addEventListener('click', () => {
-    body.classList.toggle('light');
-    const isLight = body.classList.contains('light');
-    toggle.textContent = isLight ? '☀️' : '🌙';
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  const saved = localStorage.getItem('theme') === 'light';
+  applyTheme(saved);
+  ['themeToggle', 'themeToggle2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', () => {
+      const isLight = !document.body.classList.contains('light');
+      applyTheme(isLight);
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    });
   });
 </script>
+
+{% block extra_js %}{% endblock %}
 </body>
 </html>
