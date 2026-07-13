@@ -1,8 +1,10 @@
 {% extends 'wallet/base.html' %}
 {% block title %}Dashboard — Vault{% endblock %}
 {% block content %}
-<div class="page">
-  <div class="page-header">
+<div class="page">  <style>
+    .txn-avatar.txn-in { background: #1a2e25; }
+    .txn-avatar.txn-out { background: #2e1a1a; }
+  </style>  <div class="page-header">
     <h1>Good day, {{ user.first_name }} 👋</h1>
     <p class="text-muted">Here's your wallet overview</p>
   </div>
@@ -18,7 +20,19 @@
       <a href="{% url 'deposit' %}" class="btn btn-primary">+ Deposit</a>
       <a href="{% url 'withdraw' %}" class="btn btn-ghost">Withdraw</a>
       <a href="{% url 'transfer' %}" class="btn btn-ghost">↗ Send Money</a>
-      <a href="{% url 'qr_code' %}" class="btn btn-ghost">⬛ My QR Code</a>
+      <a href="{% url 'qr_code' %}" {% if request.resolver_match.url_name == 'qr_code' %}class="active"{% endif %}>
+  <span class="nav-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="7" height="7"/>
+      <rect x="14" y="3" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/>
+      <rect x="14" y="14" width="3" height="3"/>
+      <rect x="19" y="14" width="2" height="2"/>
+      <rect x="14" y="19" width="2" height="2"/>
+      <rect x="18" y="18" width="3" height="3"/>
+    </svg>
+  </span> QR Code
+</a>
     </div>
   </div>
 
